@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Prompt Writing Tutor - 8-Element Framework (Enhanced Logic)</title>
+    <title>AI Prompt Writing Tutor</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
@@ -38,19 +38,26 @@
             font-size: 2em;
         }
         
-        .example-prompt-section {
+        .guide-section, .example-prompt-section {
             margin: 20px;
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            background-color: #e9f5ff;
+            background-color: #fff;
         }
-
-        .example-prompt-section summary {
+        
+        .guide-section summary, .example-prompt-section summary {
             font-weight: bold;
             cursor: pointer;
             color: #005A9C;
             font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .guide-section ol {
+            padding-left: 20px;
+        }
+        .guide-section li {
             margin-bottom: 10px;
         }
         
@@ -132,50 +139,34 @@
             cursor: pointer;
             font-size: 1.1em;
             transition: background-color 0.3s ease;
-            margin: 10px auto; /* Adjusted margin for multiple buttons */
+            margin: 10px auto;
         }
-        
-        button#submitPromptButton {
-            background-color: #28a745; /* Green for action */
-        }
-        button#submitPromptButton:hover {
-            background-color: #218838;
-        }
-        button#submitPromptButton:disabled {
-            background-color: #94d3a2;
+        button:disabled {
+            background-color: #999;
             cursor: not-allowed;
         }
+        
+        button#submitPromptButton { background-color: #28a745; }
+        button#submitPromptButton:hover:not(:disabled) { background-color: #218838; }
 
-        button#startNewPromptButton {
-            background-color: #6c757d; /* Secondary/neutral color */
-        }
-        button#startNewPromptButton:hover {
-            background-color: #5a6268;
-        }
+        button#startNewPromptButton { background-color: #6c757d; }
+        button#startNewPromptButton:hover:not(:disabled) { background-color: #5a6268; }
         
-        button#showExampleButton {
-            background-color: #007bff; /* Blue for a different action */
-        }
-        button#showExampleButton:hover {
-            background-color: #0069d9;
-        }
+        button#showExampleButton { background-color: #007bff; }
+        button#showExampleButton:hover:not(:disabled) { background-color: #0069d9; }
         
-        button#generateContentButton {
-             background-color: #ff8c00; /* Orange for generate */
-        }
-        button#generateContentButton:hover {
-            background-color: #cc7000;
-        }
+        button#generateContentButton { background-color: #ff8c00; }
+        button#generateContentButton:hover:not(:disabled) { background-color: #cc7000; }
 
         .action-buttons-container {
             display: flex;
-            flex-direction: column; /* Stack buttons on smaller screens */
+            flex-direction: column;
             align-items: center;
-            gap: 10px; /* Space between buttons */
+            gap: 10px;
             margin-top: 20px;
         }
 
-        @media (min-width: 600px) { /* For wider screens, place buttons side-by-side */
+        @media (min-width: 768px) {
             .action-buttons-container {
                 flex-direction: row;
                 justify-content: center;
@@ -185,7 +176,6 @@
             }
         }
 
-
         #score-container {
             text-align: center;
             margin-bottom: 20px;
@@ -193,16 +183,8 @@
             background-color: #e9f5ff;
             border-radius: 5px;
         }
-        #score-container h3 {
-             margin-top: 0;
-        }
-
-
-        #promptScore {
-            font-weight: bold;
-            font-size: 1.5em;
-            color: #007bff;
-        }
+        #score-container h3 { margin-top: 0; }
+        #promptScore { font-weight: bold; font-size: 1.5em; color: #007bff; }
         
         .feedback-component h4 {
             margin-top: 0;
@@ -219,30 +201,11 @@
             font-size: 0.95em;
             border-radius: 3px;
         }
-        .feedback-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        .feedback-item.good {
-            color: #155724; 
-            background-color: #d4edda; 
-            border-left: 4px solid #28a745;
-        }
-        .feedback-item.improvement {
-            color: #856404; 
-            background-color: #fff3cd; 
-            border-left: 4px solid #ffc107;
-        }
-        .feedback-item.critical {
-            color: #721c24; 
-            background-color: #f8d7da; 
-            border-left: 4px solid #dc3545;
-        }
-        .feedback-item.neutral {
-            color: #383d41;
-            background-color: #e2e3e5;
-            border-left: 4px solid #6c757d;
-        }
+        .feedback-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .feedback-item.good { color: #155724; background-color: #d4edda; border-left: 4px solid #28a745; }
+        .feedback-item.improvement { color: #856404; background-color: #fff3cd; border-left: 4px solid #ffc107; }
+        .feedback-item.critical { color: #721c24; background-color: #f8d7da; border-left: 4px solid #dc3545; }
+        .feedback-item.neutral { color: #383d41; background-color: #e2e3e5; border-left: 4px solid #6c757d; }
         
         #generated-content-output {
             white-space: pre-wrap;
@@ -251,6 +214,7 @@
             border-left: 4px solid #007bff;
             font-family: monospace;
             font-size: 1em;
+            border-radius: 4px;
         }
 
         footer {
@@ -269,71 +233,38 @@
     </header>
 
     <div class="container">
+
+        <section class="guide-section">
+            <details>
+                <summary>Click to View How to Use This Tutor</summary>
+                <ol>
+                    <li><strong>Write Your Prompt:</strong> Fill out the 8 framework elements below. The more detail you provide in each section, the better your results will be.</li>
+                    <li><strong>Evaluate & Refine:</strong> Click the green "Evaluate My Prompt" button. The AI will provide feedback and a score for each section. Use these suggestions to improve your prompt.</li>
+                    <li><strong>Get Examples (Optional):</strong> For deeper insight, click the blue "Show Strong vs. Weak Examples" button. The AI will rewrite your prompt to show you the difference between an effective and ineffective version.</li>
+                    <li><strong>Generate Your Content:</strong> Once you are happy with your prompt, scroll down to the "Generate Final Content" section. Choose your desired Platform and Tone from the dropdown menus.</li>
+                    <li><strong>Create:</strong> Click the orange "Generate Content" button to see the final, polished output created by the AI based on your detailed instructions.</li>
+                </ol>
+            </details>
+        </section>
+
         <section class="example-prompt-section">
             <details>
-                <summary>Click to View an Example Prompt Using the 8-Element Framework</summary>
+                <summary>Click to View an Example Prompt</summary>
                 <pre>
 Role (AI Persona):
 You are a Senior Social Media Strategist with 5+ years of experience in beauty and skincare brands.
 
-Background Context:
-ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skincare line for Gen Z. The brand aims to combine science‑backed skincare with fun, shareable content that resonates with young consumers. Key differentiators: recyclable packaging, vegan squalane, and hyaluronic acid.
-
-Persona (Audience):
-Primary: Gen Z (ages 16–24), primarily female, North America, into clean beauty, sustainable living, and TikTok trends.
-Psychographics: Values authenticity, peer recommendations, micro‑influencer reviews, and playful aesthetics (candy‑colored gradients, meme‑inspired visuals).
-
-Task:
-Create an Instagram carousel post (5 slides) showcasing the top three benefits of “Fresh Vibes.” Include the keyword “#ELFFreshVibes” in the caption and emphasize vegan squalane and hyaluronic acid as hero ingredients. The main message: “Healthy skin can be fun, affordable, and planet‑friendly.” Add: A TikTok‑friendly tip using a named trending audio.
-
-Steps:
-Hook Slide (Slide 1):
-- Punchy, trend‑aligned headline (≤6 words), e.g., “Glow Now, Save Later 💸🌱.”
-- Visual direction: Bright, candy‑colored gradients with playful animations.
-
-Benefit Slides (Slides 2–4):
-For each benefit, include:
-- Bold headline, e.g., “Skin Quencher, No Guilt”
-- 15‑word description.
-- One emoji.
-- Micro‑statistic with source link: “95% of users felt intensely hydrated after one use (2023 e.l.f. clinical‑style trial).” http://www.elfcosmetics.com/holy-hydration-face-cream/82829.html e.l.f. Cosmetics
-Focus areas:
-- Vegan squalane
-- Hyaluronic acid
-- Recyclable packaging
-
-CTA Slide (Slide 5):
-- Urgent call to action: “Tap the link for 10% off your first order! 🚨”
-- TikTok tip with specific sound: “Duet this with your GRWM using ‘Oh No!’ by Kreepa & The Shangri‑Las (http://www.tiktok.com/discover/kreepa---oh-no) TikTok & tag #ELFFreshVibes!”
-
-Tone & Length:
-Tone: Energetic, relatable, slightly playful (e.g., “Your skin’s new BFF 🌟”).
-Length:
-- Caption ≤150 characters.
-- Each slide description ≤20 words.
-Hashtags: 2 trending (e.g., #CleanBeautyTok, #SkincareHacks) + #ELFFreshVibes.
-
-Goal:
-Drive awareness and engagement by achieving 1,000 carousel saves and 500 comments within 48 hours. Highlight “Limited-time 10% discount” to boost urgency.
-
-Formatting Requirements:
-- Bullet‑style copy on each slide.
-- Bold benefit headlines.
-- Visual specs: 1080×1350 px; include alt‑text (e.g., “Pink gradient background with bouncing serum bottle”).
-- Deliver as a Markdown document with headings for each slide.
+Background and Context:
+ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skincare line for Gen Z...
+...
                 </pre>
             </details>
         </section>
 
         <section id="prompt-input-main-section">
             <h2>Enter Your Prompt</h2>
-            <div class="prompt-component">
-                <label for="promptRole">Role 
-                    <small>(Define clearly the identity or professional stance the AI should adopt.)</small>
-                </label>
-                <textarea id="promptRole" placeholder="e.g., You are a Senior Social Media Strategist..."></textarea>
-            </div>
-            <div class="prompt-component"><label for="promptBackgroundContext">Background Context <small>(Provide relevant background information or details needed to understand the prompt clearly.)</small></label><textarea id="promptBackgroundContext" placeholder="e.g., ELF Cosmetics is launching 'Fresh Vibes'..."></textarea></div>
+            <div class="prompt-component"><label for="promptRole">Role <small>(Define clearly the identity or professional stance the AI should adopt.)</small></label><textarea id="promptRole" placeholder="e.g., You are a Senior Social Media Strategist..."></textarea></div>
+            <div class="prompt-component"><label for="promptBackgroundAndContext">Background and Context <small>(Provide relevant background information or details needed to understand the prompt clearly.)</small></label><textarea id="promptBackgroundAndContext" placeholder="e.g., ELF Cosmetics is launching 'Fresh Vibes'..."></textarea></div>
             <div class="prompt-component"><label for="promptPersona">Persona (Audience) <small>(Describe clearly the target audience: demographics, psychographics, interests.)</small></label><textarea id="promptPersona" placeholder="e.g., Primary: Gen Z (ages 16–24)..."></textarea></div>
             <div class="prompt-component"><label for="promptTask">Task <small>(Clearly state the topic, specific content format required, target keywords, and main message.)</small></label><textarea id="promptTask" placeholder="e.g., Create an Instagram carousel post (5 slides)..."></textarea></div>
             <div class="prompt-component"><label for="promptSteps">Steps <small>(List specific elements or subcomponents to include in the response, such as quotes, outlines, or examples.)</small></label><textarea id="promptSteps" placeholder="e.g., Hook Slide (Slide 1): Punchy headline..."></textarea></div>
@@ -354,7 +285,7 @@ Formatting Requirements:
                 <h3>Overall Prompt Score: <span id="promptScore">--</span>/10</h3>
             </div>
             <div class="feedback-component" id="feedbackRoleContainer"><h4>Role Feedback:</h4><div id="feedbackRole"></div></div>
-            <div class="feedback-component" id="feedbackBackgroundContextContainer"><h4>Background Context Feedback:</h4><div id="feedbackBackgroundContext"></div></div>
+            <div class="feedback-component" id="feedbackBackgroundAndContextContainer"><h4>Background and Context Feedback:</h4><div id="feedbackBackgroundAndContext"></div></div>
             <div class="feedback-component" id="feedbackPersonaContainer"><h4>Persona (Audience) Feedback:</h4><div id="feedbackPersona"></div></div>
             <div class="feedback-component" id="feedbackTaskContainer"><h4>Task Feedback:</h4><div id="feedbackTask"></div></div>
             <div class="feedback-component" id="feedbackStepsContainer"><h4>Steps Feedback:</h4><div id="feedbackSteps"></div></div>
@@ -365,8 +296,7 @@ Formatting Requirements:
 
         <section id="example-generation-section" style="display: none; margin-top: 30px;">
             <h2>Strong vs. Weak Examples</h2>
-            <div class="feedback-component" id="example-output">
-                </div>
+            <div class="feedback-component" id="example-output"></div>
         </section>
         
         <section id="content-generation-controls" class="prompt-component">
@@ -417,7 +347,7 @@ Formatting Requirements:
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const frameworkElements = [
-                "Role", "BackgroundContext", "Persona", "Task",
+                "Role", "BackgroundAndContext", "Persona", "Task",
                 "Steps", "ToneLength", "Goal", "Formatting"
             ];
 
@@ -431,7 +361,14 @@ Formatting Requirements:
             const submitButton = document.getElementById('submitPromptButton');
             const startNewPromptButton = document.getElementById('startNewPromptButton');
             const showExampleButton = document.getElementById('showExampleButton');
+            const generateContentButton = document.getElementById('generateContentButton');
+            const platformSelect = document.getElementById('platformSelect');
+            const toneSelect = document.getElementById('toneSelect');
             const scoreDisplay = document.getElementById('promptScore');
+            const exampleOutputDiv = document.getElementById('example-output');
+            const exampleSection = document.getElementById('example-generation-section');
+            const generatedContentSection = document.getElementById('generated-content-section');
+            const generatedContentOutput = document.getElementById('generated-content-output');
 
             function resetTutor() {
                 frameworkElements.forEach(el => {
@@ -440,10 +377,8 @@ Formatting Requirements:
                 });
                 scoreDisplay.textContent = '--';
                 document.getElementById('promptRole').focus();
-                 // Also hide the other sections when resetting
                 document.getElementById('example-generation-section').style.display = 'none';
                 document.getElementById('generated-content-section').style.display = 'none';
-
             }
 
             function setUILoadingState(isLoading, button) {
@@ -452,13 +387,14 @@ Formatting Requirements:
                     'showExampleButton': 'Show Strong vs. Weak Examples',
                     'generateContentButton': 'Generate Content'
                 };
+                const allButtons = [submitButton, showExampleButton, generateContentButton];
 
                 if (isLoading) {
-                    button.disabled = true;
+                    allButtons.forEach(btn => btn.disabled = true);
                     button.textContent = 'Generating... Please Wait...';
                 } else {
-                    button.disabled = false;
-                    button.textContent = originalText[button.id];
+                    allButtons.forEach(btn => btn.disabled = false);
+                    allButtons.forEach(btn => btn.textContent = originalText[btn.id]);
                 }
             }
 
@@ -468,79 +404,113 @@ Formatting Requirements:
                 }
             });
 
+            // BUTTON 1: EVALUATE PROMPT
             submitButton.addEventListener('click', async function() {
-                let fullPromptText = `You are an expert AI Prompt Engineering professor...`; // Abbreviated for brevity
-                // ... Full logic for submitButton ...
-            });
-            
-            showExampleButton.addEventListener('click', async function() {
-                // ... Full logic for showExampleButton ...
-            });
-            
-            const generateContentButton = document.getElementById('generateContentButton');
-            const platformSelect = document.getElementById('platformSelect');
-            const toneSelect = document.getElementById('toneSelect');
-            const generatedContentSection = document.getElementById('generated-content-section');
-            const generatedContentOutput = document.getElementById('generated-content-output');
+                let studentPrompt = `Role:\n${inputs['Role'].value}\n\nBackground and Context:\n${inputs['BackgroundAndContext'].value}\n\nPersona (Audience):\n${inputs['Persona'].value}\n\nTask:\n${inputs['Task'].value}\n\nSteps:\n${inputs['Steps'].value}\n\nTone and Length:\n${inputs['ToneLength'].value}\n\nGoal:\n${inputs['Goal'].value}\n\nFormatting Requirements:\n${inputs['Formatting'].value}`;
+                const metaPrompt = `You are an expert AI Prompt Engineering professor... Evaluate each of the 8 sections... The student has provided the following input:\n---\n${studentPrompt}\n---\nPlease provide your entire response as a single, valid JSON object...`;
+                
+                frameworkElements.forEach(el => { if(feedbackDivs[el]) feedbackDivs[el].innerHTML = ''; });
+                scoreDisplay.textContent = '--';
+                exampleSection.style.display = 'none';
+                generatedContentSection.style.display = 'none';
 
+                setUILoadingState(true, submitButton);
+
+                try {
+                    const response = await fetch('/.netlify/functions/gemini-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: metaPrompt }) });
+                    if (!response.ok) { throw new Error(`Server responded with an error: ${response.status}`); }
+                    const aiResult = await response.json();
+                    const feedbackText = aiResult.candidates[0].content.parts[0].text;
+                    const feedbackJson = JSON.parse(feedbackText);
+
+                    scoreDisplay.textContent = feedbackJson.overallScore;
+                    frameworkElements.forEach(el => {
+                        const elKey = el.charAt(0).toLowerCase() + el.slice(1);
+                        const feedback = feedbackJson[elKey];
+                        if(feedback && feedbackDivs[el]) {
+                            const div = document.createElement('div');
+                            div.className = `feedback-item ${feedback.type || 'neutral'}`;
+                            div.textContent = feedback.feedback;
+                            feedbackDivs[el].appendChild(div);
+                        }
+                    });
+                    
+                    const summaryFeedback = feedbackJson.summary;
+                    if(summaryFeedback) {
+                        const summaryContainer = document.getElementById('feedbackFormattingContainer');
+                        const summaryHeader = document.createElement('h4');
+                        summaryHeader.textContent = "Overall Summary:";
+                        summaryHeader.style.marginTop = "20px";
+                        const summaryDiv = document.createElement('div');
+                        summaryDiv.className = 'feedback-item good';
+                        summaryDiv.textContent = summaryFeedback;
+                        summaryContainer.appendChild(summaryHeader);
+                        summaryContainer.appendChild(summaryDiv);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while getting feedback.');
+                } finally {
+                    setUILoadingState(false, submitButton);
+                }
+            });
+
+            // BUTTON 2: SHOW STRONG VS WEAK EXAMPLES
+            showExampleButton.addEventListener('click', async function() {
+                let studentPrompt = "";
+                frameworkElements.forEach(el => { studentPrompt += `${el}:\n${inputs[el].value}\n\n`; });
+                if (studentPrompt.trim().length < 50) { alert("Please enter some text into your prompt first."); return; }
+                const metaPrompt = `You are a world-class prompt engineering coach... rewrite their entire prompt in two ways: a "Weak Example" and a "Strong Example"... Here is the student's prompt:\n---\n${studentPrompt}\n---\nPlease provide your response as a single, valid JSON object with four keys: "weakExample", "weakExplanation", "strongExample", and "strongExplanation"...`;
+                
+                setUILoadingState(true, showExampleButton);
+                exampleSection.style.display = 'none';
+                exampleOutputDiv.innerHTML = '';
+
+                try {
+                    const response = await fetch('/.netlify/functions/gemini-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: metaPrompt }) });
+                    if (!response.ok) { throw new Error(`Server responded with an error: ${response.status}`); }
+                    const aiResult = await response.json();
+                    const exampleText = aiResult.candidates[0].content.parts[0].text;
+                    const exampleJson = JSON.parse(exampleText);
+                    const outputHtml = `<h4 style="color: #721c24;">Weak Example:</h4><p><em>${exampleJson.weakExplanation}</em></p><pre style="white-space: pre-wrap; background-color: #f8d7da; padding: 10px; border-radius: 4px; border-left: 4px solid #dc3545;">${exampleJson.weakExample}</pre><hr style="margin: 20px 0;"><h4 style="color: #155724;">Strong Example:</h4><p><em>${exampleJson.strongExplanation}</em></p><pre style="white-space: pre-wrap; background-color: #d4edda; padding: 10px; border-radius: 4px; border-left: 4px solid #28a745;">${exampleJson.strongExample}</pre>`;
+                    exampleOutputDiv.innerHTML = outputHtml;
+                    exampleSection.style.display = 'block';
+                } catch (error) {
+                    console.error('Error generating examples:', error);
+                    alert('An error occurred while generating examples.');
+                } finally {
+                    setUILoadingState(false, showExampleButton);
+                }
+            });
+
+            // BUTTON 3: GENERATE FINAL CONTENT
             generateContentButton.addEventListener('click', async function() {
                 let studentPrompt = "";
-                frameworkElements.forEach(el => {
-                    studentPrompt += `${el}:\n${inputs[el].value}\n\n`;
-                });
-
-                if (studentPrompt.trim().length < 50) {
-                    alert("Please write a more detailed prompt before generating content.");
-                    return;
-                }
-
+                frameworkElements.forEach(el => { studentPrompt += `${el}:\n${inputs[el].value}\n\n`; });
+                if (studentPrompt.trim().length < 50) { alert("Please write a more detailed prompt before generating content."); return; }
                 const selectedPlatform = platformSelect.value;
                 const selectedTone = toneSelect.value;
-
-                const metaPrompt = `You are a world-class AI content generator. Your task is to execute the detailed prompt provided by a user.
-Pay close attention to all instructions within the user's prompt.
-
-Additionally, apply the following final refinements:
-1.  **Platform:** Format the final output specifically for a **${selectedPlatform}**.
-2.  **Tone:** Ensure the final output has a **${selectedTone}** tone of voice.
-
-Here is the user's prompt that you must execute:
----
-${studentPrompt}
----
-
-Please provide your entire response as a single, valid JSON object with one key: "content". The value for "content" should be only the final, generated text based on the prompt's instructions.`;
-
+                const metaPrompt = `You are a world-class AI content generator... execute the detailed prompt... apply the following final refinements: 1. **Platform:** Format the final output specifically for a **${selectedPlatform}**. 2. **Tone:** Ensure the final output has a **${selectedTone}** tone of voice. Here is the user's prompt...\n---\n${studentPrompt}\n---\nPlease provide your entire response as a single, valid JSON object with one key: "content"...`;
+                
                 setUILoadingState(true, generateContentButton);
                 generatedContentSection.style.display = 'none';
                 generatedContentOutput.textContent = '';
 
                 try {
-                    const response = await fetch('/.netlify/functions/gemini-proxy', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: metaPrompt })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`The server responded with an error: ${response.status}`);
-                    }
-
+                    const response = await fetch('/.netlify/functions/gemini-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: metaPrompt }) });
+                    if (!response.ok) { throw new Error(`Server responded with an error: ${response.status}`); }
                     const aiResult = await response.json();
                     const contentText = aiResult.candidates[0].content.parts[0].text;
                     const contentJson = JSON.parse(contentText);
-
                     generatedContentOutput.textContent = contentJson.content;
                     generatedContentSection.style.display = 'block';
-
                 } catch (error) {
                     console.error('Error generating content:', error);
-                    alert('An error occurred while generating the content. Please check the console for details.');
+                    alert('An error occurred while generating the content.');
                 } finally {
                     setUILoadingState(false, generateContentButton);
                 }
             });
-
         });
     </script>
 </body>
