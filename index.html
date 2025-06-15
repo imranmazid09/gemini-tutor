@@ -255,8 +255,50 @@ Role (AI Persona):
 You are a Senior Social Media Strategist with 5+ years of experience in beauty and skincare brands.
 
 Background and Context:
-ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skincare line for Gen Z...
-...
+ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skincare line for Gen Z. The brand aims to combine science‑backed skincare with fun, shareable content that resonates with young consumers. Key differentiators: recyclable packaging, vegan squalane, and hyaluronic acid.
+
+Persona (Audience):
+Primary: Gen Z (ages 16–24), primarily female, North America, into clean beauty, sustainable living, and TikTok trends.
+Psychographics: Values authenticity, peer recommendations, micro‑influencer reviews, and playful aesthetics (candy‑colored gradients, meme‑inspired visuals).
+
+Task:
+Create an Instagram carousel post (5 slides) showcasing the top three benefits of “Fresh Vibes.” Include the keyword “#ELFFreshVibes” in the caption and emphasize vegan squalane and hyaluronic acid as hero ingredients. The main message: “Healthy skin can be fun, affordable, and planet‑friendly.” Add: A TikTok‑friendly tip using a named trending audio.
+
+Steps:
+Hook Slide (Slide 1):
+- Punchy, trend‑aligned headline (≤6 words), e.g., “Glow Now, Save Later 💸🌱.”
+- Visual direction: Bright, candy‑colored gradients with playful animations.
+
+Benefit Slides (Slides 2–4):
+For each benefit, include:
+- Bold headline, e.g., “Skin Quencher, No Guilt”
+- 15‑word description.
+- One emoji.
+- Micro‑statistic with source link: “95% of users felt intensely hydrated after one use (2023 e.l.f. clinical‑style trial).” http://www.elfcosmetics.com/holy-hydration-face-cream/82829.html e.l.f. Cosmetics
+Focus areas:
+- Vegan squalane
+- Hyaluronic acid
+- Recyclable packaging
+
+CTA Slide (Slide 5):
+- Urgent call to action: “Tap the link for 10% off your first order! 🚨”
+- TikTok tip with specific sound: “Duet this with your GRWM using ‘Oh No!’ by Kreepa & The Shangri‑Las (http://www.tiktok.com/discover/kreepa---oh-no) TikTok & tag #ELFFreshVibes!”
+
+Tone and Length:
+Tone: Energetic, relatable, slightly playful (e.g., “Your skin’s new BFF 🌟”).
+Length:
+- Caption ≤150 characters.
+- Each slide description ≤20 words.
+Hashtags: 2 trending (e.g., #CleanBeautyTok, #SkincareHacks) + #ELFFreshVibes.
+
+Goal:
+Drive awareness and engagement by achieving 1,000 carousel saves and 500 comments within 48 hours. Highlight “Limited-time 10% discount” to boost urgency.
+
+Formatting Requirements:
+- Bullet‑style copy on each slide.
+- Bold benefit headlines.
+- Visual specs: 1080×1350 px; include alt‑text (e.g., “Pink gradient background with bouncing serum bottle”).
+- Deliver as a Markdown document with headings for each slide.
                 </pre>
             </details>
         </section>
@@ -374,11 +416,10 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                 frameworkElements.forEach(el => {
                     inputs[el].value = '';
                     if(feedbackDivs[el]) feedbackDivs[el].innerHTML = '';
-                    // Reset headers
                     const header = document.querySelector(`#feedback${el}Container h4`);
                     if(header) {
-                         const baseName = header.textContent.split(' (')[0];
-                         header.textContent = `${baseName}`;
+                         const baseName = header.textContent.split(' (')[0].replace(':', '');
+                         header.textContent = `${baseName}:`;
                     }
                 });
                 scoreDisplay.textContent = '--';
@@ -393,14 +434,14 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                     'showExampleButton': 'Show Strong vs. Weak Examples',
                     'generateContentButton': 'Generate Content'
                 };
-                const allButtons = [submitButton, showExampleButton, generateContentButton];
+                const allButtons = [submitButton, startNewPromptButton, showExampleButton, generateContentButton];
 
                 if (isLoading) {
                     allButtons.forEach(btn => btn.disabled = true);
                     button.textContent = 'Generating... Please Wait...';
                 } else {
                     allButtons.forEach(btn => btn.disabled = false);
-                    allButtons.forEach(btn => btn.textContent = originalText[btn.id]);
+                    allButtons.forEach(btn => { if(originalText[btn.id]) btn.textContent = originalText[btn.id]; });
                 }
             }
 
@@ -413,12 +454,9 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
             // BUTTON 1: EVALUATE PROMPT
             submitButton.addEventListener('click', async function() {
                 let studentPrompt = `Role:\n${inputs['Role'].value}\n\nBackground and Context:\n${inputs['BackgroundAndContext'].value}\n\nPersona (Audience):\n${inputs['Persona'].value}\n\nTask:\n${inputs['Task'].value}\n\nSteps:\n${inputs['Steps'].value}\n\nTone and Length:\n${inputs['ToneLength'].value}\n\nGoal:\n${inputs['Goal'].value}\n\nFormatting Requirements:\n${inputs['Formatting'].value}`;
-                const metaPrompt = `You are an expert AI Prompt Engineering professor. Your task is to review a student's prompt based on an 8-element framework. For each of the 8 sections, provide: a "feedback" string, a "type" string ('good', 'improvement', or 'critical'), and a "score" number (from 1 to 5). After evaluating all sections, also provide an "overallScore" (1-10) and a "summary" string. Please provide your entire response as a single, valid JSON object. Do not include any text or markdown formatting before or after the JSON object. The JSON object MUST use the following structure, with a key for each of the 8 framework elements:\n{\n  "role": { "feedback": "...", "type": "...", "score": 5 },\n  "backgroundAndContext": { "feedback": "...", "type": "...", "score": 4 },\n  "persona": { "feedback": "...", "type": "...", "score": 5 },\n  "task": { "feedback": "...", "type": "...", "score": 5 },\n  "steps": { "feedback": "...", "type": "...", "score": 3 },\n  "toneLength": { "feedback": "...", "type": "...", "score": 4 },\n  "goal": { "feedback": "...", "type": "...", "score": 5 },\n  "formatting": { "feedback": "...", "type": "...", "score": 2 },\n  "overallScore": 8,\n  "summary": "..."\n}\n\nHere is the student's prompt:\n---\n${studentPrompt}`;
+                const metaPrompt = `You are a strict but fair AI Prompt Engineering professor teaching a university course. Your feedback should be constructive and critical, helping a student improve their prompt for a professional marketing or public relations context. While creativity is noted, the prompt's practical applicability, clarity, and specificity are the most important grading criteria. Review the student's prompt based on an 8-element framework. For each of the 8 sections, provide: a "feedback" string, a "type" string ('good', 'improvement', or 'critical'), and a "score" number (from 1 to 5). After evaluating all sections, also provide an "overallScore" (1-10) and a "summary" string. Please provide your entire response as a single, valid JSON object. Do not include any text or markdown formatting before or after the JSON object. The JSON object MUST use the following structure, with a key for each of the 8 framework elements:\n{\n  "role": { "feedback": "...", "type": "...", "score": 5 },\n  "backgroundAndContext": { "feedback": "...", "type": "...", "score": 4 },\n  "persona": { "feedback": "...", "type": "...", "score": 5 },\n  "task": { "feedback": "...", "type": "...", "score": 5 },\n  "steps": { "feedback": "...", "type": "...", "score": 3 },\n  "toneLength": { "feedback": "...", "type": "...", "score": 4 },\n  "goal": { "feedback": "...", "type": "...", "score": 5 },\n  "formatting": { "feedback": "...", "type": "...", "score": 2 },\n  "overallScore": 8,\n  "summary": "..."\n}\n\nHere is the student's prompt:\n---\n${studentPrompt}`;
                 
-                frameworkElements.forEach(el => { if(feedbackDivs[el]) feedbackDivs[el].innerHTML = ''; });
-                scoreDisplay.textContent = '--';
-                exampleSection.style.display = 'none';
-                generatedContentSection.style.display = 'none';
+                resetTutor();
 
                 setUILoadingState(true, submitButton);
 
@@ -437,7 +475,7 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                         if(feedback && feedbackDivs[el]) {
                             const header = document.querySelector(`#feedback${el}Container h4`);
                             if (header) {
-                                const baseName = header.textContent.split(' (')[0].replace(':', '');
+                                const baseName = header.textContent.replace(':', '').split(' (')[0];
                                 header.innerHTML = `${baseName}: <span style="font-weight:normal; color:#555;">(Score: ${feedback.score}/5)</span>`;
                             }
                             const div = document.createElement('div');
@@ -472,7 +510,7 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                 let studentPrompt = "";
                 frameworkElements.forEach(el => { studentPrompt += `${el}:\n${inputs[el].value}\n\n`; });
                 if (studentPrompt.trim().length < 50) { alert("Please enter some text into your prompt first."); return; }
-                const metaPrompt = `You are a world-class prompt engineering coach... rewrite their entire prompt in two ways: a "Weak Example" and a "Strong Example"... Here is the student's prompt:\n---\n${studentPrompt}\n---\nPlease provide your response as a single, valid JSON object with four keys: "weakExample", "weakExplanation", "strongExample", and "strongExplanation"...`;
+                const metaPrompt = `You are a world-class prompt engineering coach. Rewrite a student's prompt in two ways: a "Weak Example" (demonstrating common mistakes) and a "Strong Example" (demonstrating best practices). For each, provide a short explanation of why it is weak or strong. Here is the student's prompt:\n---\n${studentPrompt}\n---\nPlease provide your response as a single, valid JSON object with four keys: "weakExample", "weakExplanation", "strongExample", and "strongExplanation". Use newline characters (\\n) for formatting within the example strings.`;
                 
                 setUILoadingState(true, showExampleButton);
                 exampleSection.style.display = 'none';
@@ -502,7 +540,7 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                 if (studentPrompt.trim().length < 50) { alert("Please write a more detailed prompt before generating content."); return; }
                 const selectedPlatform = platformSelect.value;
                 const selectedTone = toneSelect.value;
-                const metaPrompt = `You are a world-class AI content generator... execute the detailed prompt... apply the following final refinements: 1. **Platform:** Format the final output specifically for a **${selectedPlatform}**. 2. **Tone:** Ensure the final output has a **${selectedTone}** tone of voice. Here is the user's prompt...\n---\n${studentPrompt}\n---\nPlease provide your entire response as a single, valid JSON object with one key: "content"...`;
+                const metaPrompt = `You are a world-class AI content generator. Execute the detailed prompt provided by a user. Apply these final refinements: 1. **Platform:** Format the output for a **${selectedPlatform}**. 2. **Tone:** Use a **${selectedTone}** tone of voice. Here is the user's prompt:\n---\n${studentPrompt}\n---\nPlease provide your entire response as a single JSON object with one key: "content". The value for "content" must be the generated text as a single flat string, not a nested object.`;
                 
                 setUILoadingState(true, generateContentButton);
                 generatedContentSection.style.display = 'none';
@@ -514,8 +552,14 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                     const aiResult = await response.json();
                     const contentText = aiResult.candidates[0].content.parts[0].text;
                     const contentJson = JSON.parse(contentText);
-                    generatedContentOutput.textContent = contentJson.content;
+                    
+                    let finalContent = contentJson.content;
+                    if (typeof finalContent === 'object') {
+                        finalContent = JSON.stringify(finalContent, null, 2);
+                    }
+                    generatedContentOutput.textContent = finalContent;
                     generatedContentSection.style.display = 'block';
+
                 } catch (error) {
                     console.error('Error generating content:', error);
                     alert('An error occurred while generating the content.');
