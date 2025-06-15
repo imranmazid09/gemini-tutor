@@ -103,7 +103,7 @@
             resize: vertical;
         }
 
-        button#submitPromptButton, button#startNewPromptButton {
+        button#submitPromptButton, button#startNewPromptButton, button#showExampleButton {
             display: block;
             color: white;
             padding: 12px 25px;
@@ -133,6 +133,13 @@
             background-color: #5a6268;
         }
         
+        button#showExampleButton {
+            background-color: #007bff; /* Blue for a different action */
+        }
+        button#showExampleButton:hover {
+            background-color: #0069d9;
+        }
+
         .action-buttons-container {
             display: flex;
             flex-direction: column; /* Stack buttons on smaller screens */
@@ -146,7 +153,7 @@
                 flex-direction: row;
                 justify-content: center;
             }
-             button#submitPromptButton, button#startNewPromptButton {
+             button#submitPromptButton, button#startNewPromptButton, button#showExampleButton {
                 margin: 0 10px;
             }
         }
@@ -335,6 +342,7 @@ Formatting Requirements:
             <div class="action-buttons-container">
                 <button id="submitPromptButton">Evaluate My Prompt</button>
                 <button id="startNewPromptButton">Start A New Prompt</button>
+                <button id="showExampleButton">Show Strong vs. Weak Examples</button>
             </div>
         </section>
 
@@ -351,6 +359,12 @@ Formatting Requirements:
             <div class="feedback-component" id="feedbackToneLengthContainer"><h4>Tone and Length Feedback:</h4><div id="feedbackToneLength"></div></div>
             <div class="feedback-component" id="feedbackGoalContainer"><h4>Goal Feedback:</h4><div id="feedbackGoal"></div></div>
             <div class="feedback-component" id="feedbackFormattingContainer"><h4>Formatting Requirements Feedback:</h4><div id="feedbackFormatting"></div></div>
+        </section>
+
+        <section id="example-generation-section" style="display: none; margin-top: 30px;">
+            <h2>Strong vs. Weak Examples</h2>
+            <div class="feedback-component" id="example-output">
+                </div>
         </section>
     </div>
 
@@ -383,20 +397,22 @@ Formatting Requirements:
                 });
                 scoreDisplay.textContent = '--';
                 document.getElementById('promptRole').focus();
+                 // Also hide the example section when resetting
+                document.getElementById('example-generation-section').style.display = 'none';
             }
 
-            function setUILoadingState(isLoading) {
+            function setUILoadingState(isLoading, button) {
+                const originalText = {
+                    'submitPromptButton': 'Evaluate My Prompt',
+                    'showExampleButton': 'Show Strong vs. Weak Examples'
+                };
+
                 if (isLoading) {
-                    submitButton.disabled = true;
-                    submitButton.textContent = 'Evaluating... Please Wait...';
-                    // Clear previous feedback
-                    frameworkElements.forEach(el => {
-                        feedbackDivs[el].innerHTML = '';
-                    });
-                    scoreDisplay.textContent = '--';
+                    button.disabled = true;
+                    button.textContent = 'Generating... Please Wait...';
                 } else {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Evaluate My Prompt';
+                    button.disabled = false;
+                    button.textContent = originalText[button.id];
                 }
             }
 
@@ -444,7 +460,13 @@ ${inputs['Formatting'].value}
 
 Please provide your entire response as a single, valid JSON object with keys for each section (e.g., "role", "backgroundContext"), plus "overallScore" and "summary". Do not include any text before or after the JSON object. Example keys: "role", "backgroundContext", "persona", etc.`;
 
-                setUILoadingState(true);
+                // Clear previous feedback before new evaluation
+                frameworkElements.forEach(el => { feedbackDivs[el].innerHTML = ''; });
+                scoreDisplay.textContent = '--';
+                document.getElementById('example-generation-section').style.display = 'none';
+
+
+                setUILoadingState(true, submitButton);
 
                 try {
                     // This is the call to our new secure Netlify function
@@ -498,9 +520,82 @@ Please provide your entire response as a single, valid JSON object with keys for
                     console.error('Error:', error);
                     alert('An error occurred while getting feedback. Please check the console for details.');
                 } finally {
-                    setUILoadingState(false);
+                    setUILoadingState(false, submitButton);
                 }
             });
+
+            const showExampleButton = document.getElementById('showExampleButton');
+            const exampleOutputDiv = document.getElementById('example-output');
+            const exampleSection = document.getElementById('example-generation-section');
+
+            showExampleButton.addEventListener('click', async function() {
+                // First, assemble the student's current prompt from all text boxes
+                let studentPrompt = "";
+                frameworkElements.forEach(el => {
+                    studentPrompt += `${el}:\n${inputs[el].value}\n\n`;
+                });
+                
+                // Check if the prompt is mostly empty
+                if (studentPrompt.trim().length < 50) {
+                    alert("Please enter some text into your prompt before generating examples.");
+                    return;
+                }
+
+                const metaPrompt = `You are a world-class prompt engineering coach. A student has submitted the following prompt.
+Your task is to rewrite their entire prompt in two ways: a "Weak Example" and a "Strong Example".
+
+1.  **Weak Example**: Rewrite the prompt to demonstrate common mistakes, such as being too vague, having a generic role, a non-specific task, or an unclear goal.
+2.  **Strong Example**: Rewrite the prompt to be an excellent, professional example. It should be specific, detailed, actionable, and follow all best practices.
+3.  **Explanations**: For each example, provide a short explanation (2-3 sentences) of why it is weak or strong.
+
+Here is the student's prompt:
+---
+${studentPrompt}
+---
+
+Please provide your response as a single, valid JSON object with four keys: "weakExample", "weakExplanation", "strongExample", and "strongExplanation". Use newline characters (\\n) for formatting within the example strings.`;
+
+                setUILoadingState(true, showExampleButton);
+                exampleSection.style.display = 'none'; // Hide old results
+                exampleOutputDiv.innerHTML = ''; // Clear old results
+
+                try {
+                    const response = await fetch('/.netlify/functions/gemini-proxy', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: metaPrompt })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`The server responded with an error: ${response.status}`);
+                    }
+
+                    const aiResult = await response.json();
+                    const exampleText = aiResult.candidates[0].content.parts[0].text;
+                    const exampleJson = JSON.parse(exampleText);
+
+                    // Create formatted HTML to display the examples
+                    const outputHtml = `
+                        <h4 style="color: #721c24;">Weak Example:</h4>
+                        <p><em>${exampleJson.weakExplanation}</em></p>
+                        <pre style="white-space: pre-wrap; background-color: #f8d7da; padding: 10px; border-radius: 4px; border-left: 4px solid #dc3545;">${exampleJson.weakExample}</pre>
+                        <hr style="margin: 20px 0;">
+                        <h4 style="color: #155724;">Strong Example:</h4>
+                        <p><em>${exampleJson.strongExplanation}</em></p>
+                        <pre style="white-space: pre-wrap; background-color: #d4edda; padding: 10px; border-radius: 4px; border-left: 4px solid #28a745;">${exampleJson.strongExample}</pre>
+                    `;
+
+                    exampleOutputDiv.innerHTML = outputHtml;
+                    exampleSection.style.display = 'block'; // Show the section
+
+                } catch (error) {
+                    console.error('Error generating examples:', error);
+                    alert('An error occurred while generating examples. Please check the console for details.');
+                } finally {
+                    setUILoadingState(false, showExampleButton);
+                }
+            });
+
         });
     </script>
 </body>
