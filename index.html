@@ -239,7 +239,7 @@
                 <summary>Click to View How to Use This Tutor</summary>
                 <ol>
                     <li><strong>Write Your Prompt:</strong> Fill out the 8 framework elements below. The more detail you provide in each section, the better your results will be.</li>
-                    <li><strong>Evaluate & Refine:</strong> Click the green "Evaluate My Prompt" button. The AI will provide feedback and a score for each section. Use these suggestions to improve your prompt.</li>
+                    <li><strong>Evaluate & Refine:</strong> Click the green "Evaluate My Prompt" button. The AI will provide feedback and a score for each section. Use these suggestions to improve your prompt. Your text will remain so you can edit and re-evaluate.</li>
                     <li><strong>Get Examples (Optional):</strong> For deeper insight, click the blue "Show Strong vs. Weak Examples" button. The AI will rewrite your prompt to show you the difference between an effective and ineffective version.</li>
                     <li><strong>Generate Your Content:</strong> Once you are happy with your prompt, scroll down to the "Generate Final Content" section. Choose your desired Platform and Tone from the dropdown menus.</li>
                     <li><strong>Create:</strong> Click the orange "Generate Content" button to see the final, polished output created by the AI based on your detailed instructions.</li>
@@ -453,11 +453,22 @@ Formatting Requirements:
 
             // BUTTON 1: EVALUATE PROMPT
             submitButton.addEventListener('click', async function() {
+                // Clear previous feedback ONLY, not the user's input
+                frameworkElements.forEach(el => { 
+                    if(feedbackDivs[el]) feedbackDivs[el].innerHTML = ''; 
+                    const header = document.querySelector(`#feedback${el}Container h4`);
+                    if(header) {
+                         const baseName = header.textContent.split(' (')[0].replace(':', '');
+                         header.textContent = `${baseName}:`;
+                    }
+                });
+                scoreDisplay.textContent = '--';
+                exampleSection.style.display = 'none';
+                generatedContentSection.style.display = 'none';
+
                 let studentPrompt = `Role:\n${inputs['Role'].value}\n\nBackground and Context:\n${inputs['BackgroundAndContext'].value}\n\nPersona (Audience):\n${inputs['Persona'].value}\n\nTask:\n${inputs['Task'].value}\n\nSteps:\n${inputs['Steps'].value}\n\nTone and Length:\n${inputs['ToneLength'].value}\n\nGoal:\n${inputs['Goal'].value}\n\nFormatting Requirements:\n${inputs['Formatting'].value}`;
                 const metaPrompt = `You are a strict but fair AI Prompt Engineering professor teaching a university course. Your feedback should be constructive and critical, helping a student improve their prompt for a professional marketing or public relations context. While creativity is noted, the prompt's practical applicability, clarity, and specificity are the most important grading criteria. Review the student's prompt based on an 8-element framework. For each of the 8 sections, provide: a "feedback" string, a "type" string ('good', 'improvement', or 'critical'), and a "score" number (from 0 to 5, where 0 means the section is missing or irrelevant). After evaluating all sections, also provide an "overallScore" (from 0 to 10) and a "summary" string. Please provide your entire response as a single, valid JSON object. Do not include any text or markdown formatting before or after the JSON object. The JSON object MUST use the following structure, with a key for each of the 8 framework elements:\n{\n  "role": { "feedback": "...", "type": "...", "score": 5 },\n  "backgroundAndContext": { "feedback": "...", "type": "...", "score": 4 },\n  "persona": { "feedback": "...", "type": "...", "score": 5 },\n  "task": { "feedback": "...", "type": "...", "score": 5 },\n  "steps": { "feedback": "...", "type": "...", "score": 3 },\n  "toneLength": { "feedback": "...", "type": "...", "score": 4 },\n  "goal": { "feedback": "...", "type": "...", "score": 5 },\n  "formatting": { "feedback": "...", "type": "...", "score": 0 },\n  "overallScore": 8,\n  "summary": "..."\n}\n\nHere is the student's prompt:\n---\n${studentPrompt}`;
                 
-                resetTutor();
-
                 setUILoadingState(true, submitButton);
 
                 try {
@@ -533,27 +544,37 @@ Formatting Requirements:
                 }
             });
 
-            // BUTTON 3: GENERATE FINAL CONTENT
+            // BUTTON 3: GENERATE FINAL CONTENT (Two-Step Process)
             generateContentButton.addEventListener('click', async function() {
                 let studentPrompt = "";
                 frameworkElements.forEach(el => { studentPrompt += `${el}:\n${inputs[el].value}\n\n`; });
                 if (studentPrompt.trim().length < 50) { alert("Please write a more detailed prompt before generating content."); return; }
-                const selectedPlatform = platformSelect.value;
-                const selectedTone = toneSelect.value;
-                const metaPrompt = `Your primary and most important task is to creatively and accurately execute the user's detailed prompt provided below. The user's prompt is the source of truth for the content. AFTER generating the content based on the user's prompt, apply the following final formatting and style adjustments. Do NOT let these adjustments override the core request in the user's prompt.\n\n1. **Final Platform Formatting:** Format the final output specifically for a **${selectedPlatform}**.\n2. **Final Tone:** Ensure the final output has a **${selectedTone}** tone of voice.\n\nHere is the user's prompt that you MUST execute:\n---\n${studentPrompt}\n---\n\nPlease provide your entire response as a single JSON object with one key: "content". The value for "content" must be the generated text as a single flat string, not a nested object.`;
                 
                 setUILoadingState(true, generateContentButton);
                 generatedContentSection.style.display = 'none';
                 generatedContentOutput.textContent = '';
 
                 try {
-                    const response = await fetch('/.netlify/functions/gemini-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: metaPrompt }) });
-                    if (!response.ok) { throw new Error(`Server responded with an error: ${response.status}`); }
-                    const aiResult = await response.json();
-                    const contentText = aiResult.candidates[0].content.parts[0].text;
-                    const contentJson = JSON.parse(contentText);
+                    // STEP 1: Generate the raw content based on the user's detailed prompt
+                    const generationMetaPrompt = `Your only task is to creatively and accurately execute the user's detailed prompt provided below. Return only the resulting text. Do not add any conversational filler or extra formatting. Provide the output as a single JSON object with one key: "content".\n\nHere is the user's prompt:\n---\n${studentPrompt}`;
+                    const generationResponse = await fetch('/.netlify/functions/gemini-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: generationMetaPrompt }) });
+                    if (!generationResponse.ok) throw new Error(`Content generation failed with status: ${generationResponse.status}`);
                     
-                    let finalContent = contentJson.content;
+                    const generationResult = await generationResponse.json();
+                    const rawContent = JSON.parse(generationResult.candidates[0].content.parts[0].text).content;
+
+                    // STEP 2: Adapt the raw content for the selected platform and tone
+                    const selectedPlatform = platformSelect.value;
+                    const selectedTone = toneSelect.value;
+                    const adaptationMetaPrompt = `You are an expert social media editor. Your task is to take the following block of text and adapt it for an **${selectedPlatform}** using a **${selectedTone}** tone of voice. Add relevant hashtags, emojis, and formatting suitable for the platform. Do not change the core message or substance of the text. Provide the final adapted text in a single JSON object with one key: "content".\n\nHere is the text to adapt:\n---\n${rawContent}`;
+                    
+                    const adaptationResponse = await fetch('/.netlify/functions/gemini-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: adaptationMetaPrompt }) });
+                    if (!adaptationResponse.ok) throw new Error(`Content adaptation failed with status: ${adaptationResponse.status}`);
+                    
+                    const adaptationResult = await adaptationResponse.json();
+                    const finalContentJson = JSON.parse(adaptationResult.candidates[0].content.parts[0].text);
+
+                    let finalContent = finalContentJson.content;
                     if (typeof finalContent === 'object') {
                         finalContent = JSON.stringify(finalContent, null, 2);
                     }
@@ -561,8 +582,8 @@ Formatting Requirements:
                     generatedContentSection.style.display = 'block';
 
                 } catch (error) {
-                    console.error('Error generating content:', error);
-                    alert('An error occurred while generating the content.');
+                    console.error('Error in two-step content generation:', error);
+                    alert('An error occurred while generating the content. Please check the browser console for details.');
                 } finally {
                     setUILoadingState(false, generateContentButton);
                 }
