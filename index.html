@@ -373,7 +373,13 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
             function resetTutor() {
                 frameworkElements.forEach(el => {
                     inputs[el].value = '';
-                    feedbackDivs[el].innerHTML = '';
+                    if(feedbackDivs[el]) feedbackDivs[el].innerHTML = '';
+                    // Reset headers
+                    const header = document.querySelector(`#feedback${el}Container h4`);
+                    if(header) {
+                         const baseName = header.textContent.split(' (')[0];
+                         header.textContent = `${baseName}`;
+                    }
                 });
                 scoreDisplay.textContent = '--';
                 document.getElementById('promptRole').focus();
@@ -407,7 +413,7 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
             // BUTTON 1: EVALUATE PROMPT
             submitButton.addEventListener('click', async function() {
                 let studentPrompt = `Role:\n${inputs['Role'].value}\n\nBackground and Context:\n${inputs['BackgroundAndContext'].value}\n\nPersona (Audience):\n${inputs['Persona'].value}\n\nTask:\n${inputs['Task'].value}\n\nSteps:\n${inputs['Steps'].value}\n\nTone and Length:\n${inputs['ToneLength'].value}\n\nGoal:\n${inputs['Goal'].value}\n\nFormatting Requirements:\n${inputs['Formatting'].value}`;
-                const metaPrompt = `You are an expert AI Prompt Engineering professor... Evaluate each of the 8 sections... The student has provided the following input:\n---\n${studentPrompt}\n---\nPlease provide your entire response as a single, valid JSON object...`;
+                const metaPrompt = `You are an expert AI Prompt Engineering professor. Your task is to review a student's prompt based on an 8-element framework. For each of the 8 sections, provide: a "feedback" string, a "type" string ('good', 'improvement', or 'critical'), and a "score" number (from 1 to 5). After evaluating all sections, also provide an "overallScore" (1-10) and a "summary" string. Please provide your entire response as a single, valid JSON object. Do not include any text or markdown formatting before or after the JSON object. The JSON object MUST use the following structure, with a key for each of the 8 framework elements:\n{\n  "role": { "feedback": "...", "type": "...", "score": 5 },\n  "backgroundAndContext": { "feedback": "...", "type": "...", "score": 4 },\n  "persona": { "feedback": "...", "type": "...", "score": 5 },\n  "task": { "feedback": "...", "type": "...", "score": 5 },\n  "steps": { "feedback": "...", "type": "...", "score": 3 },\n  "toneLength": { "feedback": "...", "type": "...", "score": 4 },\n  "goal": { "feedback": "...", "type": "...", "score": 5 },\n  "formatting": { "feedback": "...", "type": "...", "score": 2 },\n  "overallScore": 8,\n  "summary": "..."\n}\n\nHere is the student's prompt:\n---\n${studentPrompt}`;
                 
                 frameworkElements.forEach(el => { if(feedbackDivs[el]) feedbackDivs[el].innerHTML = ''; });
                 scoreDisplay.textContent = '--';
@@ -424,10 +430,16 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                     const feedbackJson = JSON.parse(feedbackText);
 
                     scoreDisplay.textContent = feedbackJson.overallScore;
+
                     frameworkElements.forEach(el => {
                         const elKey = el.charAt(0).toLowerCase() + el.slice(1);
                         const feedback = feedbackJson[elKey];
                         if(feedback && feedbackDivs[el]) {
+                            const header = document.querySelector(`#feedback${el}Container h4`);
+                            if (header) {
+                                const baseName = header.textContent.split(' (')[0].replace(':', '');
+                                header.innerHTML = `${baseName}: <span style="font-weight:normal; color:#555;">(Score: ${feedback.score}/5)</span>`;
+                            }
                             const div = document.createElement('div');
                             div.className = `feedback-item ${feedback.type || 'neutral'}`;
                             div.textContent = feedback.feedback;
@@ -449,7 +461,7 @@ ELF Cosmetics is launching “Fresh Vibes,” a new vegan, cruelty‑free skinca
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('An error occurred while getting feedback.');
+                    alert('An error occurred while getting feedback. Please check the browser console (Right-click -> Inspect -> Console) for details.');
                 } finally {
                     setUILoadingState(false, submitButton);
                 }
