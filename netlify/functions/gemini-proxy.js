@@ -17,7 +17,7 @@ exports.handler = async function(event) {
         const API_KEY = process.env.GEMINI_API_KEY;
 
         // This is the official URL for the Gemini API
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
         
         // This is the data structure the Gemini API expects
         const payload = {
