@@ -2,7 +2,7 @@
 
 BRIEF Framework for Prompt Writing
 
-A beginner activity for CAP 105: plan, prompt, check, and improve one organic Instagram post or social ad. By Dr Imran.
+A beginner activity: plan, prompt, check, and improve one organic Instagram post or social ad.
 
 ## Student workflow
 
@@ -77,3 +77,9 @@ The function has a 45-second provider timeout and a 200-request-per-minute per-I
 - [Netlify function environment variables](https://docs.netlify.com/build/functions/environment-variables/)
 
 The revised teaching documents are the current rubric authority: the 8/10 threshold also requires every element at least 1 and E/F at 2. Tone is specified in E; the human review is Facts / Fit / Revision with a whole-copy confirmation. This intentionally replaces the older build-spec rule.
+
+## Learning aids and request recovery
+
+The weak/strong comparison uses a separate Neighborhood Paws adoption-information event that is not in the ten practice situations and cannot be loaded into student fields. Definitions of all five BRIEF letters precede the grading rubric. E feedback is labeled as coming from the objective or format instructions because the format may be supplied automatically.
+
+Draft requests show immediate button and inline progress, use a 55-second browser deadline, validate the draft before rendering, and release controls on failure. A successful live baseline check did not reproduce the externally reported renderer freeze; its browser-specific cause is not yet identified. Delayed, failed, and malformed responses are checked separately from successful requests.

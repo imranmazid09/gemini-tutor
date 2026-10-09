@@ -7,6 +7,22 @@ export const FIELDS = {
   E: {name: 'Expected output', hint: 'Two parts: the audience outcome, then the deliverable with length, structure, and tone.'},
   F: {name: 'Fact-check', hint: 'Set the factual boundary, request a claim-and-source list, and explain your human check.'}
 };
+export const DEFINITIONS = {
+ B:'Background gives the AI the situation, approved facts, and a style reference it needs to work from.',
+ R:'Role tells the AI which relevant professional perspective or expertise to use.',
+ I:'Intended audience identifies who the message is for and what matters to them in this situation.',
+ E:'Expected output states the communication objective and specifies the deliverable, format, length, and tone.',
+ F:'Fact-check sets factual boundaries, requests a separate claim-and-source list, and states how you will verify the draft.'
+};
+export const WORKED_EXAMPLE = {
+ title:'Neighborhood Paws Adoption Day',
+ facts:['A fictional shelter holds an adoption information day Saturday, 11 a.m.–2 p.m., at 18 Oak Avenue.','Visitors can meet shelter staff and learn about the adoption process.','There is no entry fee.'],
+ limits:'No animal counts, adoption guarantees, fees, health claims, or visitor testimonials are approved.',
+ reference:'Meet the team. Ask your questions. Learn what adoption could look like for you.',
+ weak:{B:'A shelter has an event.',R:'Be a marketer.',I:'Everyone.',E:'Make an exciting Instagram post.',F:'Make sure it is accurate.'},
+ strong:{B:'Neighborhood Paws is a fictional shelter. Its adoption information day is Saturday, 11 a.m.–2 p.m., at 18 Oak Avenue. Visitors can meet staff and learn about adoption. Entry is free. No adoption guarantee or animal count is approved. Style reference only: "Meet the team. Ask your questions. Learn what adoption could look like for you."',R:'You are a social media copywriter for animal shelters.',I:'Local adults who are considering adoption but want to understand the process before deciding.',E:'Objective: encourage these adults to visit the information day and ask staff questions. Format: one organic Instagram caption of at most 50 words, with a welcoming tone and one invitation to attend.',F:'Use only approved Background facts. Do not invent animal counts, fees, quotes, or adoption guarantees. List factual claims separately with their source. I will compare each claim with the fact sheet and correct or remove unsupported claims before submitting.'},
+ why:{B:'The strong version supplies event details and distinguishes style from facts.',R:'It names expertise suited to the organization and task.',I:'It specifies an audience with a relevant uncertainty.',E:'It connects an audience response to a concrete format and limits.',F:'It sets boundaries, requests sources, and makes the human check explicit.'}
+};
 export const RULE = 'At least 8/10, every field at least 1, and E and F each at 2.';
 export const RUBRIC = {
   B: ['No usable situation or facts.', 'Some usable context, but insufficient task facts or no usable style example.', 'Enough specific approved facts for the task plus a usable style example.'],
