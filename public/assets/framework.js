@@ -92,8 +92,18 @@ export function formatIssues(copy, output, platform='instagram') {
 }
 
 export function exampleFor(id){const sc=getScenario(id);return sc.id===SCENARIO.id?{...EXAMPLE}:{B:sc.facts.join(' ')+' '+sc.limits+' Style reference only: "'+sc.reference+'"',R:'You are a social media copywriter for campus organizations.',I:'Students who see this on Instagram and need clear information to decide whether to take part.',E:'Objective: help students decide whether to respond to this opportunity. Format: '+OUTPUTS.organic.format+'.',F:MODEL_F};}
-export function splitExpected(text=''){const parts=text.split(/\bFormat:/i);return {objective:parts[0].replace(/^Objective:\s*/i,'').trim(),format:parts.slice(1).join('Format:').trim()};}
+export function splitExpected(text=''){const parts=String(text).split(/\bFormat:/i);return {objective:cleanObjective(text),format:parts.slice(1).join('Format:').trim()};}
 export function combineExpected(objective,format){return [objective.trim()?'Objective: '+objective.trim():'',format.trim()?'Format: '+format.trim():''].filter(Boolean).join('\n');}
 
 export const SCENARIO_LABELS={"community-garden":"Community Garden","garden-volunteers":"Community Garden","library-hours":"Library Hours","workshop-correction":"Resume Workshop"};
 export function claimSourceLabel(source){return String(source).replace(/\bfact[ -]sheet\s*:\s*title\b/gi,"fact sheet: practice-situation title");}
+
+export const CREATIVE_ANGLES={
+ auto:{label:'Let AI choose a strong opening',instruction:'Choose the strongest audience-relevant opening: a question, a relatable moment, or a surprising turn of phrase.'},
+ question:{label:'Open with a question',instruction:"Open with a specific question that connects to the audience's situation, not a generic question."},
+ moment:{label:'Start with a relatable moment',instruction:"Start with a recognizable moment in the audience's day. Make the situation concrete without inventing facts."},
+ surprise:{label:'Use a surprising opening',instruction:'Use an unexpected contrast or turn of phrase tied to the approved facts. Do not invent an offer or product benefit.'}
+};
+export function cleanObjective(text){return String(text).split(/(?:Beat\s*2\s*[,.:]\s*(?:the\s+)?format\s*:|(?:\\n|\n)?\s*Format\s*:)/i)[0].replace(/^(?:Beat\s*1\s*[,.:]\s*)?(?:the\s+)?objective\s*:\s*/i,'').trim();}
+export function hasMixedObjective(text){return /Beat\s*[12]\b|\bFormat\s*:/i.test(text);}
+export const CREATIVE_COMPARISON={routine:'Visit Neighborhood Paws this Saturday to learn about adoption. Entry is free.',distinctive:'Thinking about adoption? Start with questions, not a commitment. Meet the Neighborhood Paws team Saturday, 11 a.m.–2 p.m., at 18 Oak Avenue. Entry is free. Come learn about the process.',why:"The second version addresses the audience's uncertainty, gives the invitation an idea, and keeps the factual details intact. It is an illustration, not evidence of campaign performance."};

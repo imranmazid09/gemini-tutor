@@ -1,7 +1,7 @@
-import {LETTERS, RUBRIC_VERSION, briefSnapshot, readiness, wordCount, formatIssues, SCENARIO, getScenario, splitExpected,PLATFORMS,outputSpec} from './framework.js';
+import {LETTERS, RUBRIC_VERSION, briefSnapshot, readiness, wordCount, formatIssues, SCENARIO, getScenario, splitExpected,PLATFORMS,outputSpec,CREATIVE_ANGLES} from './framework.js';
 export const STORAGE_KEY='brief-trainer-v1';
 export function newReview(){return {claims:[],noClaims:false,noClaimsReason:'',fit:'',finalCopy:'',explanation:'',confirmed:false,completedAt:null};}
-export function newSession(scenario=SCENARIO.id){return {version:1,rubricVersion:RUBRIC_VERSION,id:crypto.randomUUID(),startedAt:new Date().toISOString(),revision:0,scenario,eParts:{objective:'',format:''},feedback:null,output:'',platform:'instagram',brief:Object.fromEntries(LETTERS.map(k=>[k,''])),grade:null,draft:null,review:newReview(),events:[{type:'session_start',at:new Date().toISOString()}],grades:[],coaching:[],drafts:[]};}
+export function newSession(scenario=SCENARIO.id){return {version:1,rubricVersion:RUBRIC_VERSION,id:crypto.randomUUID(),startedAt:new Date().toISOString(),revision:0,scenario,eParts:{objective:'',format:'',creative:'auto'},feedback:null,output:'',platform:'instagram',brief:Object.fromEntries(LETTERS.map(k=>[k,''])),grade:null,draft:null,review:newReview(),events:[{type:'session_start',at:new Date().toISOString()}],grades:[],coaching:[],drafts:[]};}
 export function hasCurrentGrade(session){
   const g=session.grade;
   try{return Boolean(g && g.snapshot===briefSnapshot(session.brief) && g.output===session.output && (g.scenario??SCENARIO.id)===session.scenario && (g.platform??'instagram')===(session.platform??'instagram') && g.rubricVersion===RUBRIC_VERSION && readiness(g.elements).greenlit && g.approval);}catch{return false;}
@@ -29,7 +29,7 @@ export function summary(session,now=Date.now()){
 }
 export function restoreSession(raw){
   const s=JSON.parse(raw);
-  s.platform??='instagram';if(!Object.hasOwn(PLATFORMS,s.platform))throw new Error('Invalid saved platform.');s.scenario??=SCENARIO.id;s.eParts??=splitExpected(s.brief?.E);s.feedback??=s.grade?{result:{...s.grade,approval:undefined},mode:"grade"}:null;
+  s.platform??='instagram';if(!Object.hasOwn(PLATFORMS,s.platform))throw new Error('Invalid saved platform.');s.scenario??=SCENARIO.id;s.eParts??=splitExpected(s.brief?.E);s.eParts.creative??='auto';if(!Object.hasOwn(CREATIVE_ANGLES,s.eParts.creative))throw new Error('Invalid creative angle.');s.feedback??=s.grade?{result:{...s.grade,approval:undefined},mode:"grade"}:null;
   if(!getScenario(s.scenario)||typeof s.eParts.objective!=="string"||typeof s.eParts.format!=="string")throw new Error("Invalid saved scenario or expected output.");
   if(s.version!==1 || s.rubricVersion!==RUBRIC_VERSION || typeof s.id!=='string'||!Number.isFinite(Date.parse(s.startedAt))||!Number.isInteger(s.revision)||!LETTERS.every(k=>typeof s.brief?.[k]==='string'&&s.brief[k].length<=6000)||!['','organic','ad'].includes(s.output)||!Array.isArray(s.events)||!Array.isArray(s.grades)||!Array.isArray(s.coaching)||!Array.isArray(s.drafts)||!s.review||!Array.isArray(s.review.claims))throw new Error('Saved session needs recovery.');
   for(const k of ['finalCopy','fit','explanation','noClaimsReason'])if(typeof s.review[k]!=='string')throw new Error('Invalid saved review.');
