@@ -6,16 +6,14 @@ A beginner activity: plan, prompt, check, and improve one organic social post or
 
 ## Student workflow
 
-1. Choose a fictional situation, platform, and message type. Inspect approved facts, then write one prompt in your own words. BRIEF teaching material is hidden.
-2. Generate one first draft and write a short reflection about what works and what to change. The original prompt and draft are retained unchanged.
-3. Unlock BRIEF. Write the five fields, use coaching, and grade. Readiness requires 8/10, every field at least 1, and E/F at 2.
-4. Generate the BRIEF draft using the same situation, platform, message type, model, supplied facts, and server generation instructions as the first attempt. Each response can still vary.
-5. Compare both AI drafts side by side. Identify two differences, explain which instructions may have contributed, and assess which draft serves the task better. Either draft, mixed strengths, or similar quality are valid assessments.
-6. Complete Facts / Fit / Revision, save final work locally, and download the learning record for instructor submission. The record includes the original prompt/draft, first reflection, final BRIEF, feedback, second draft, comparison, checks, revision, and rationale.
+1. Choose one of ten fictional practice situations and inspect its approved facts, limits, and style reference. Changing situations starts a fresh activity after confirmation.
+2. Choose Instagram, Facebook, Threads, X, or LinkedIn, then choose organic post or paid ad copy and write B Background, R Role, I Intended audience, E Expected output, and F Fact-check. E has separate communication-objective and output-format inputs; selecting a platform or message type fills only the format, preserving the objective.
+3. Get unlimited coaching, then grade the current BRIEF. Readiness requires at least 8/10, every field at least 1, and E and F each at 2.
+4. Generate one draft from the complete BRIEF. Changing the brief or output requires grading again.
+5. Complete the human Facts / Fit / Revision review. Check claims, explain audience/objective fit, make one purposeful improvement, and explain it in two sentences.
+6. Download a printable HTML report. This does not submit the assignment.
 
-The situation and output choices lock after first generation. Start a new activity to change them. BRIEF guidance is unlocked only after reflection. First-attempt proof lasts seven days; grade approval lasts one hour. Server checks the first-attempt context and model for comparison-flow requests. An earlier saved activity can still be resumed, with its absent first attempt reported honestly rather than reconstructed. Downloading does not submit work. This learning comparison does not establish that BRIEF caused every difference.
-
-The rubric matches BRIEF rubric 1.0. Classroom format limits are not official platform limits. A ready brief is permission to draft, not verification of the message or evidence of campaign success.
+The rubric, facts, and examples match BRIEF rubric 1.0 in the revised student guide, demo bank, and calibration pack. Word limits are classroom constraints, not official platform limits. A ready brief is permission to draft, not a verified message or evidence of campaign success.
 
 ## Netlify setup
 
