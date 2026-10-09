@@ -1,11 +1,13 @@
-# BRIEF Prompt Trainer
+# Prompt Writing Tutor
+
+BRIEF Framework for Prompt Writing
 
 A beginner activity for CAP 105: plan, prompt, check, and improve one organic Instagram post or social ad. By Dr Imran.
 
 ## Student workflow
 
-1. Inspect the fictional Campus Corner Coffee fact sheet.
-2. Choose one output and write B Background, R Role, I Intended audience, E Expected output, and F Fact-check.
+1. Choose one of ten fictional practice situations and inspect its approved facts, limits, and style reference. Changing situations starts a fresh activity after confirmation.
+2. Choose one output and write B Background, R Role, I Intended audience, E Expected output, and F Fact-check. E has separate communication-objective and output-format inputs; selecting an output fills only the format, preserving the objective.
 3. Get unlimited coaching, then grade the current BRIEF. Readiness requires at least 8/10, every field at least 1, and E and F each at 2.
 4. Generate one draft from the complete BRIEF. Changing the brief or output requires grading again.
 5. Complete the human Facts / Fit / Revision review. Check claims, explain audience/objective fit, make one purposeful improvement, and explain it in two sentences.
@@ -62,7 +64,7 @@ A suspected instruction attempt is only a review flag, not evidence of misconduc
 - `netlify/functions/gemini-proxy.mjs`: modern Netlify handler and per-IP rate limit.
 - `tests/`: local contract tests and instructor calibration fixtures.
 
-Readiness approvals are stateless and expire after one hour. They bind to the normalized brief, selected output, and rubric version. Generation verifies the approval on the server. This is a learning gate, not identity verification or protection against every form of endpoint abuse.
+Readiness approvals are stateless and expire after one hour. They bind to the normalized brief, selected practice situation, selected output, and rubric version. Generation verifies the approval on the server. This is a learning gate, not identity verification or protection against every form of endpoint abuse.
 
 The function has a 45-second provider timeout and a 200-request-per-minute per-IP limit. Shared campus IPs count together; review the limit during a pilot. Network errors preserve work and allow retry. Browser-storage failures show a warning and leave download available. Stored work is device-specific and may be cleared; download before ending the activity.
 
@@ -73,3 +75,5 @@ The function has a 45-second provider timeout and a 200-request-per-minute per-I
 - [Google API-key guidance](https://ai.google.dev/gemini-api/docs/api-key)
 - [Google models](https://ai.google.dev/gemini-api/docs/models)
 - [Netlify function environment variables](https://docs.netlify.com/build/functions/environment-variables/)
+
+The revised teaching documents are the current rubric authority: the 8/10 threshold also requires every element at least 1 and E/F at 2. Tone is specified in E; the human review is Facts / Fit / Revision with a whole-copy confirmation. This intentionally replaces the older build-spec rule.

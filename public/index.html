@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Plan, prompt, check, and improve a social message with the five-part BRIEF framework.">
-  <title>BRIEF Prompt Trainer</title>
+  <title>Prompt Writing Tutor</title>
   <link rel="stylesheet" href="/assets/style.css">
   <script type="module" src="/assets/app.js"></script>
 </head>
 <body>
 <a class="skip" href="#plan">Skip to your BRIEF</a>
-<header><div class="wrap"><p class="eyebrow">CAP 105 · Technology in PR and Advertising</p><h1>BRIEF Prompt Trainer</h1><p class="lede">Plan a message. Draft with AI. Check it yourself.</p><p class="byline">By Dr Imran</p></div></header>
+<header><div class="wrap"><p class="eyebrow">CAP 105 · Technology in PR and Advertising</p><h1>Prompt Writing Tutor</h1><p class="lede">BRIEF Framework for Prompt Writing</p><p class="byline">By Dr Imran</p></div></header>
 <main class="wrap">
   <nav aria-label="Activity stages"><a href="#plan">1 Plan</a><a href="#feedback">2 Get feedback</a><a href="#draft">3 Draft</a><a href="#review">4 Check and improve</a></nav>
   <p class="privacy">Use the fictional facts below. Your work is saved in this browser and included in your download. Coaching and drafting send your BRIEF to Google Gemini through this tutor. Do not enter personal information.</p>
@@ -18,15 +18,15 @@
   <p id="status" class="status" role="status" aria-live="polite">Start with the facts, then write your BRIEF.</p>
   <div class="layout">
     <aside class="card facts" aria-labelledby="factsTitle">
-      <p class="eyebrow">Your evidence</p><h2 id="factsTitle">Campus Corner Coffee</h2><p>This business and all its details are fictional.</p><ul id="factList"></ul><p id="factLimits"></p><h3>Style reference only</h3><blockquote id="styleReference"></blockquote><p class="small">Match the style if useful. An example does not approve new facts or offers.</p>
+      <p class="eyebrow">Your evidence</p><label for="scenario">Choose a practice situation</label><select id="scenario"></select><p id="scenarioFocus" class="small"></p><h2 id="factsTitle">Campus Corner Coffee</h2><p>All practice situations and their details are fictional.</p><ul id="factList"></ul><p id="factLimits"></p><h3>Style reference only</h3><blockquote id="styleReference"></blockquote><p class="small">Match the style if useful. An example does not approve new facts or offers.</p>
       <details><summary>See the framework and rubric</summary><div id="rubric"></div><p id="rule"></p><p class="small">A greenlight approves instructions for drafting. Human review happens afterward. Campaign results would be evaluated after distribution.</p></details>
       <details><summary>Compare weak and strong BRIEFs</summary><h3>Weak</h3><pre>I need a post for a coffee shop. College students. Write a post.</pre><p class="small">The AI has to guess facts, format, and how accuracy will be checked.</p><h3>Strong</h3><div id="strongExample"></div><p class="small">Specific facts, a clear audience and outcome, a defined format, and a human check give the draft direction.</p><button type="button" id="loadExample" class="secondary">Use this example for practice</button></details>
     </aside>
     <div>
-      <section id="plan" class="card" aria-labelledby="planTitle"><p class="eyebrow">01 · Plan</p><h2 id="planTitle">Write your BRIEF</h2><p>Your task: encourage a suitable response to the latte launch. Choose one output, then make your audience and objective specific.</p>
+      <section id="plan" class="card" aria-labelledby="planTitle"><p class="eyebrow">01 · Plan</p><h2 id="planTitle">Write your BRIEF</h2><p id="scenarioTask"></p>
         <label for="outputType">Your output</label><select id="outputType"><option value="">Choose an output</option><option value="organic">Organic Instagram post</option><option value="ad">Instagram ad copy</option></select>
         <p id="outputHint" class="hint">These are classroom formats, not official platform limits.</p>
-        <button type="button" id="formatHelp" class="secondary">Add the format to E</button><p class="small">Write your own objective above the format. Changing output requires a new grade.</p>
+        <p class="small">Choosing an output fills its format in E automatically. Write your own communication objective. Changing output requires a new grade.</p>
         <div id="fields"></div>
         <details><summary>A model F instruction</summary><p id="modelF"></p><p class="small">Adapt it, then carry out the check on the draft.</p></details>
         <div class="actions"><button type="button" id="coach">Coach my BRIEF</button><button type="button" id="grade" class="secondary">Grade my BRIEF</button></div>

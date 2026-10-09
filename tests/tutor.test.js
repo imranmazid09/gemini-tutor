@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,LETTERS,readiness,formatIssues} from '../public/assets/framework.js';
+import {EXAMPLE,LETTERS,readiness,formatIssues,SCENARIOS,splitExpected,combineExpected} from '../public/assets/framework.js';
 import {createHandler,approvalToken,verifyApproval,validateResult,requestBody,parseInteraction} from '../lib/tutor.js';
 import {newSession,hasCurrentGrade,hasCurrentDraft,invalidateBrief,reviewErrors,reportHTML,restoreSession,summary} from '../public/assets/session.js';
 import {readFile} from 'node:fs/promises';
@@ -70,3 +70,11 @@ test('static publish excludes function code and inline executable scripts',async
  const toml=await readFile(new URL('../netlify.toml',import.meta.url),'utf8');assert(toml.includes('publish = "public"'));
  const app=await readFile(new URL('../public/assets/app.js',import.meta.url),'utf8');assert(!app.includes('.innerHTML'));
 });
+
+test('scenario selection changes the approved facts and invalidates cross-scenario approval',async()=>{
+ assert.equal(SCENARIOS.length,10);assert.equal(new Set(SCENARIOS.map(s=>s.id)).size,10);
+ for(const sc of SCENARIOS){assert(sc.task&&sc.reference&&sc.limits&&sc.facts.length>=3);assert.equal(JSON.parse(requestBody('grade',EXAMPLE,'organic','gemini-3.8-flash',sc.id).input).approvedFactSheet.id,sc.id);}
+ const token=approvalToken(EXAMPLE,'organic','test-secret',1000,'library-hours');assert(verifyApproval(token,EXAMPLE,'organic','test-secret',1000,'library-hours'));assert(!verifyApproval(token,EXAMPLE,'organic','test-secret',1000,'campus-corner-coffee'));
+ let calls=0;const h=handler(async()=>{calls++;return response(result([2,2,2,2,2]));});assert.equal((await h(request({action:'generate',brief:EXAMPLE,output:'organic',scenario:'campus-corner-coffee',approval:token}))).status,409);assert.equal((await h(request({action:'grade',brief:EXAMPLE,output:'organic',scenario:'invented'}))).status,400);assert.equal(calls,0);
+});
+test('split expected output preserves the objective and migrates existing saved fields',()=>{const parts=splitExpected(EXAMPLE.E);assert(parts.objective.includes('encourage'));assert(parts.format.includes('50 words'));assert.equal(splitExpected(combineExpected(parts.objective,'new format')).objective,parts.objective);const s=newSession();s.brief={...EXAMPLE};delete s.eParts;delete s.scenario;const restored=restoreSession(JSON.stringify(s));assert.deepEqual(restored.eParts,parts);assert.equal(restored.scenario,'campus-corner-coffee');});
