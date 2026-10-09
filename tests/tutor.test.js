@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {EXAMPLE,LETTERS,readiness,formatIssues,SCENARIOS,splitExpected,combineExpected,WORKED_EXAMPLE,DEFINITIONS} from '../public/assets/framework.js';
+import {EXAMPLE,LETTERS,readiness,formatIssues,SCENARIOS,splitExpected,combineExpected,WORKED_EXAMPLE,DEFINITIONS,claimSourceLabel} from '../public/assets/framework.js';
 import {createHandler,approvalToken,verifyApproval,validateResult,requestBody,parseInteraction} from '../lib/tutor.js';
 import {newSession,hasCurrentGrade,hasCurrentDraft,invalidateBrief,reviewErrors,reportHTML,restoreSession,summary} from '../public/assets/session.js';
 import {readFile} from 'node:fs/promises';
@@ -80,3 +80,5 @@ test('scenario selection changes the approved facts and invalidates cross-scenar
 test('split expected output preserves the objective and migrates existing saved fields',()=>{const parts=splitExpected(EXAMPLE.E);assert(parts.objective.includes('encourage'));assert(parts.format.includes('50 words'));assert.equal(splitExpected(combineExpected(parts.objective,'new format')).objective,parts.objective);const s=newSession();s.brief={...EXAMPLE};delete s.eParts;delete s.scenario;const restored=restoreSession(JSON.stringify(s));assert.deepEqual(restored.eParts,parts);assert.equal(restored.scenario,'campus-corner-coffee');});
 
 test('worked comparison is independent of selectable practice and every letter has a definition',()=>{assert(!SCENARIOS.some(sc=>sc.title===WORKED_EXAMPLE.title));for(const k of LETTERS){assert(DEFINITIONS[k].length>40);assert(WORKED_EXAMPLE.weak[k]&&WORKED_EXAMPLE.strong[k]&&WORKED_EXAMPLE.why[k]);}assert(WORKED_EXAMPLE.strong.E.includes('Objective:'));assert(WORKED_EXAMPLE.strong.E.includes('Format:'));});
+
+test('readable claim labels and activity counters keep their scope across restore and reset',()=>{assert.equal(claimSourceLabel('Campus Corner Coffee fact sheet: title'),'Campus Corner Coffee fact sheet: practice-situation title');assert.equal(claimSourceLabel('Fact sheet: price'),'Fact sheet: price');const s=newSession();s.events.push({type:'coach_request',at:s.startedAt},{type:'grade_attempt',at:s.startedAt});const resumed=restoreSession(JSON.stringify(s));assert.equal(summary(resumed).coachRequests,1);assert.equal(summary(resumed).gradeAttempts,1);assert.equal(summary(newSession()).coachRequests,0);assert.equal(summary(newSession()).gradeAttempts,0);});

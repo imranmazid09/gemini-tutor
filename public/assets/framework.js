@@ -83,3 +83,6 @@ export function formatIssues(copy, output) {
 export function exampleFor(id){const sc=getScenario(id);return sc.id===SCENARIO.id?{...EXAMPLE}:{B:sc.facts.join(' ')+' '+sc.limits+' Style reference only: "'+sc.reference+'"',R:'You are a social media copywriter for campus organizations.',I:'Students who see this on Instagram and need clear information to decide whether to take part.',E:'Objective: help students decide whether to respond to this opportunity. Format: '+OUTPUTS.organic.format+'.',F:MODEL_F};}
 export function splitExpected(text=''){const parts=text.split(/\bFormat:/i);return {objective:parts[0].replace(/^Objective:\s*/i,'').trim(),format:parts.slice(1).join('Format:').trim()};}
 export function combineExpected(objective,format){return [objective.trim()?'Objective: '+objective.trim():'',format.trim()?'Format: '+format.trim():''].filter(Boolean).join('\n');}
+
+export const SCENARIO_LABELS={"community-garden":"Community Garden","garden-volunteers":"Community Garden","library-hours":"Library Hours","workshop-correction":"Resume Workshop"};
+export function claimSourceLabel(source){return String(source).replace(/\bfact[ -]sheet\s*:\s*title\b/gi,"fact sheet: practice-situation title");}

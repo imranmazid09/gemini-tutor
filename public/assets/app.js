@@ -1,4 +1,4 @@
-import {LETTERS,FIELDS,RULE,RUBRIC,SCENARIO,OUTPUTS,MODEL_F,EXAMPLE,RUBRIC_VERSION,briefSnapshot,formatIssues,SCENARIOS,getScenario,exampleFor,splitExpected,combineExpected,DEFINITIONS,WORKED_EXAMPLE} from './framework.js';
+import {LETTERS,FIELDS,RULE,RUBRIC,SCENARIO,OUTPUTS,MODEL_F,EXAMPLE,RUBRIC_VERSION,briefSnapshot,formatIssues,SCENARIOS,getScenario,exampleFor,splitExpected,combineExpected,DEFINITIONS,WORKED_EXAMPLE,SCENARIO_LABELS,claimSourceLabel} from './framework.js';
 import {STORAGE_KEY,newSession,newReview,hasCurrentGrade,hasCurrentDraft,invalidateBrief,reviewErrors,summary,restoreSession,reportHTML} from './session.js';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
@@ -11,10 +11,10 @@ function event(type,data={}){session.events.push({type,at:new Date().toISOString
 function status(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error);}
 function reviewChanged(){session.review.completedAt=null;$('completion').hidden=true;saveSoon();}
 function briefChanged(){$('replaceDraftPrompt').hidden=true;invalidateBrief(session);$('feedbackOutput').replaceChildren();renderStatus();saveSoon();}
-function renderSummary(){const s=summary(session);$('summary').textContent=`${s.coachRequests} coach ${s.coachRequests===1?'request':'requests'} · ${s.gradeAttempts} grade ${s.gradeAttempts===1?'attempt':'attempts'} · ${s.elapsedMinutes} ${s.elapsedMinutes===1?'minute':'minutes'} elapsed. Retry counts are process information, not penalties.`;}
+function renderSummary(){const s=summary(session);$('summary').textContent=`This saved activity: ${s.coachRequests} coach ${s.coachRequests===1?'request':'requests'} · ${s.gradeAttempts} grade ${s.gradeAttempts===1?'attempt':'attempts'} · ${s.elapsedMinutes} ${s.elapsedMinutes===1?'minute':'minutes'} elapsed. Returning to this activity resumes these counts. Start a new activity to reset them. Retries carry no penalty.`;}
 function renderStatus(){
   const ready=hasCurrentGrade(session),draftCurrent=hasCurrentDraft(session);
-  $('readiness').textContent=ready?`Your BRIEF has been greenlit: ${session.grade.total}/10. This approves drafting; the copy still needs human review.`:session.grade?`${session.grade.total}/10 — not ready to draft yet. ${RULE} Revise the fields below and grade again.`:'Grade your current BRIEF when ready. '+RULE;
+  $('readiness').textContent=ready?`Your BRIEF has been greenlit: ${session.grade.total}/10. This approves drafting; the copy still needs human review.`:session.grade?`${session.grade.total}/10: not ready to draft yet. ${RULE} Revise the fields below and grade again.`:'Grade your current BRIEF when ready. '+RULE;
   $('generationHint').textContent=ready?'Generate one draft using the format and tone in E.':'Grade your current BRIEF to unlock drafting. '+RULE;
   for(const id of ['coach','grade','generate','newSession'])$(id).disabled=busy||(id==='generate'&&!ready)||(['coach','grade'].includes(id)&&!session.output);
   $('replaceDraft').disabled=busy||!ready;$('keepDraft').disabled=busy;if(!ready||!session.draft)$('replaceDraftPrompt').hidden=true;
@@ -42,7 +42,7 @@ function renderClaims(){
 function renderDraft(){
   $('originalDraft').textContent=session.draft?.copy||'';$('aiClaims').replaceChildren();
   if(session.draft){if(!session.draft.claims.length)$('aiClaims').append(node('p','The AI listed no factual claims. Check the entire draft yourself.'));
-    for(const c of session.draft.claims)$('aiClaims').append(node('p',`${c.claim} | AI source label: ${c.source}`));}
+    for(const c of session.draft.claims)$('aiClaims').append(node('p',`${c.claim} | AI source label: ${claimSourceLabel(c.source)}`));}
   for(const key of ['fit','finalCopy','explanation','noClaimsReason'])$(key).value=session.review[key];
   for(const key of ['confirmed','noClaims'])$(key).checked=session.review[key];renderClaims();renderFormat();renderStatus();
 }
@@ -71,7 +71,7 @@ async function request(action,replaceExisting=false){
     if(revision!==session.revision||snapshot!==briefSnapshot(session.brief)||output!==session.output||scenario!==session.scenario){event('stale_response',{action});status('Your BRIEF changed during the request. The earlier response was discarded. Request feedback on the current version.');return;}
     if(action==='grade'){
       session.grade={...result,snapshot,output,scenario,at:new Date().toISOString()};session.grades.push({...session.grade,approval:undefined,brief});event('grade_result',{total:result.total,scores:Object.fromEntries(LETTERS.map(k=>[k,result.elements[k].score])),greenlit:result.greenlit});if(result.suspectedInjection)event('suspected_instruction_attempt',{action});
-      if(result.greenlit)event('greenlight',{total:result.total});session.feedback={result:{...result,approval:undefined},mode:'grade'};renderFeedback(result,'grade');status(result.greenlit?'Your BRIEF is ready to draft. The draft still needs your review.':`${result.total}/10 — not ready to draft yet. Review the field feedback, revise, and try again.`);
+      if(result.greenlit)event('greenlight',{total:result.total});session.feedback={result:{...result,approval:undefined},mode:'grade'};renderFeedback(result,'grade');status(result.greenlit?'Your BRIEF is ready to draft. The draft still needs your review.':`${result.total}/10: not ready to draft yet. Review the field feedback, revise, and try again.`);
     }else if(action==='coach'){
       session.coaching.push({...result,brief,at:new Date().toISOString()});event('coach_result',{elements:LETTERS});if(result.suspectedInjection)event('suspected_instruction_attempt',{action});session.feedback={result,mode:'coach'};renderFeedback(result,'coach');status('Your coaching is ready. Adapt the fixes, then grade your revised BRIEF.');
     }else{
@@ -87,7 +87,7 @@ function download(){
 }
 // All student/model content is rendered with textContent or field values.
 function renderScenario(){const sc=getScenario(session.scenario);$('scenario').value=sc.id;$('factsTitle').textContent=sc.title;$('scenarioFocus').textContent=sc.focus;$('scenarioTask').textContent=sc.task+' Choose an output, then write a specific audience and objective.';$('factList').replaceChildren();for(const f of sc.facts)$('factList').append(node('li',f));$('factLimits').textContent=sc.limits;$('styleReference').textContent=sc.reference;}
-for(const sc of SCENARIOS){const option=node('option',sc.title+' · '+sc.focus);option.value=sc.id;$('scenario').append(option);}
+for(const sc of SCENARIOS){const option=node('option',SCENARIO_LABELS[sc.id]||sc.title);option.value=sc.id;$('scenario').append(option);}
 $('exampleTitle').textContent=WORKED_EXAMPLE.title;for(const fact of WORKED_EXAMPLE.facts)$('exampleFacts').append(node('li',fact));$('exampleLimits').textContent=WORKED_EXAMPLE.limits;$('exampleReference').textContent=WORKED_EXAMPLE.reference;
 for(const k of LETTERS){for(const [id,key] of [['weakExample','weak'],['strongExample','strong'],['exampleWhy','why']]){const el=node('p');el.append(node('strong',k+' · '+FIELDS[k].name+': '),document.createTextNode(WORKED_EXAMPLE[key][k]));$(id).append(el);}const definition=node('p');definition.append(node('strong',k+' · '+FIELDS[k].name+': '),document.createTextNode(DEFINITIONS[k]));$('definitions').append(definition);}
 $('modelF').textContent=MODEL_F;$('rule').textContent=RULE;
