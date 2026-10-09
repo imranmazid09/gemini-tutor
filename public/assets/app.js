@@ -10,13 +10,14 @@ function saveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);}
 function event(type,data={}){session.events.push({type,at:new Date().toISOString(),...data});}
 function status(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error);}
 function reviewChanged(){session.review.completedAt=null;$('completion').hidden=true;saveSoon();}
-function briefChanged(){invalidateBrief(session);$('feedbackOutput').replaceChildren();renderStatus();saveSoon();}
+function briefChanged(){$('replaceDraftPrompt').hidden=true;invalidateBrief(session);$('feedbackOutput').replaceChildren();renderStatus();saveSoon();}
 function renderSummary(){const s=summary(session);$('summary').textContent=`${s.coachRequests} coach ${s.coachRequests===1?'request':'requests'} · ${s.gradeAttempts} grade ${s.gradeAttempts===1?'attempt':'attempts'} · ${s.elapsedMinutes} ${s.elapsedMinutes===1?'minute':'minutes'} elapsed. Retry counts are process information, not penalties.`;}
 function renderStatus(){
   const ready=hasCurrentGrade(session),draftCurrent=hasCurrentDraft(session);
   $('readiness').textContent=ready?`Your BRIEF has been greenlit: ${session.grade.total}/10. This approves drafting; the copy still needs human review.`:session.grade?`${session.grade.total}/10 — not ready to draft yet. ${RULE} Revise the fields below and grade again.`:'Grade your current BRIEF when ready. '+RULE;
   $('generationHint').textContent=ready?'Generate one draft using the format and tone in E.':'Grade your current BRIEF to unlock drafting. '+RULE;
   for(const id of ['coach','grade','generate','newSession'])$(id).disabled=busy||(id==='generate'&&!ready)||(['coach','grade'].includes(id)&&!session.output);
+  $('replaceDraft').disabled=busy||!ready;$('keepDraft').disabled=busy;if(!ready||!session.draft)$('replaceDraftPrompt').hidden=true;
   $('reviewFields').disabled=!draftCurrent||busy;$('scenario').disabled=busy;
   $('draftArea').hidden=!session.draft;
   $('reviewHint').textContent=draftCurrent?'Read the entire draft, then complete your own review.':session.draft?'Your BRIEF changed. The earlier draft is preserved below; generate a new draft before completing this review.':'Generate a draft first. You will check facts, explain fit, and make one purposeful revision.';
@@ -46,11 +47,13 @@ function renderDraft(){
   for(const key of ['confirmed','noClaims'])$(key).checked=session.review[key];renderClaims();renderFormat();renderStatus();
 }
 function renderFormat(){const errors=formatIssues(session.review.finalCopy,session.output);$('formatStatus').textContent=session.review.finalCopy.trim()?(errors.join(' ')||'Within the classroom format. Check the message itself before confirming.'):'The final copy should follow the format in E.';}
-async function request(action){
+async function request(action,replaceExisting=false){
+  if(busy)return;
   if(!session.output){status('Choose an output before requesting feedback.',true);$('outputType').focus();return;}
   if(!LETTERS.some(k=>session.brief[k].trim())){status('Write at least one BRIEF field first.',true);$('field-B').focus();return;}
   if(action==='generate'&&!hasCurrentGrade(session)){status('Grade your current BRIEF first.',true);return;}
-  if(action==='generate'&&session.draft&&!confirm('Generating again starts a fresh human review. Your earlier draft and review will remain in the process record. Continue?'))return;
+  if(action==='generate'&&session.draft&&!replaceExisting){$('replaceDraftPrompt').hidden=false;status('A previous draft is saved. Choose whether to generate a new draft or keep the existing one.');$('replaceDraft').focus();return;}
+  $('replaceDraftPrompt').hidden=true;
   const revision=session.revision,snapshot=briefSnapshot(session.brief),output=session.output,scenario=session.scenario,brief={...session.brief};
   const controller=new AbortController();let timeout,progressTimer;const started=Date.now();
   busy=true;
@@ -101,9 +104,9 @@ for(const k of LETTERS){
 }
 function outputHint(){const type=session.output;$('outputHint').textContent=type?`Classroom format: ${OUTPUTS[type].format}. These are classroom constraints.`:'Choose a format. These are classroom constraints, not official platform limits.';}
 $('outputType').value=session.output;$('outputType').addEventListener('change',()=>{session.output=$('outputType').value;session.eParts.format=session.output?OUTPUTS[session.output].format+'.':'';syncE();$('field-E-format').value=session.eParts.format;outputHint();briefChanged();status(session.output?'The output format has been filled in E. Your objective is preserved. Grade again when ready.':'Choose an output to fill the format in E and enable feedback. Your objective is preserved.');});
-function startActivity(scenario){clearTimeout(saveTimer);try{localStorage.removeItem(STORAGE_KEY);}catch{}recoveryRaw=null;storageAvailable=true;session=newSession(scenario);fillFields();$('outputType').value='';$('feedbackOutput').replaceChildren();renderScenario();outputHint();renderDraft();persist();status('A new activity is ready. Inspect the facts and decide who the message should reach.');}
+function startActivity(scenario){$('replaceDraftPrompt').hidden=true;clearTimeout(saveTimer);try{localStorage.removeItem(STORAGE_KEY);}catch{}recoveryRaw=null;storageAvailable=true;session=newSession(scenario);fillFields();$('outputType').value='';$('feedbackOutput').replaceChildren();renderScenario();outputHint();renderDraft();persist();status('A new activity is ready. Inspect the facts and decide who the message should reach.');}
 $('scenario').addEventListener('change',()=>{const id=$('scenario').value;if(LETTERS.some(k=>session.brief[k].trim())&&!confirm('Changing the practice situation starts a new activity. Download your current session first if you want to keep it. Continue?')){$('scenario').value=session.scenario;return;}startActivity(id);});
-for(const action of ['coach','grade'])$(action).addEventListener('click',()=>request(action));$('generate').addEventListener('click',()=>request('generate'));
+for(const action of ['coach','grade'])$(action).addEventListener('click',()=>request(action));$('generate').addEventListener('click',()=>request('generate'));$('replaceDraft').addEventListener('click',()=>request('generate',true));$('keepDraft').addEventListener('click',()=>{$('replaceDraftPrompt').hidden=true;status('Kept your existing draft and review.');$('generate').focus();});
 for(const key of ['fit','finalCopy','explanation','noClaimsReason'])$(key).addEventListener('input',()=>{session.review[key]=$(key).value;reviewChanged();if(key==='finalCopy')renderFormat();});
 for(const key of ['confirmed','noClaims'])$(key).addEventListener('change',()=>{session.review[key]=$(key).checked;reviewChanged();});
 $('addClaim').addEventListener('click',()=>{session.review.claims.push({claim:'',evidence:'',decision:''});session.review.noClaims=false;$('noClaims').checked=false;renderClaims();reviewChanged();});
