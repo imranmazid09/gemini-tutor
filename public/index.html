@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plan, prompt, check, and improve a social message with the five-part BRIEF framework.">
+  <title>BRIEF Prompt Trainer</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#plan">Skip to your BRIEF</a>
+<header><div class="wrap"><p class="eyebrow">CAP 105 · Technology in PR and Advertising</p><h1>BRIEF Prompt Trainer</h1><p class="lede">Plan a message. Draft with AI. Check it yourself.</p><p class="byline">By Dr Imran</p></div></header>
+<main class="wrap">
+  <nav aria-label="Activity stages"><a href="#plan">1 Plan</a><a href="#feedback">2 Get feedback</a><a href="#draft">3 Draft</a><a href="#review">4 Check and improve</a></nav>
+  <p class="privacy">Use the fictional facts below. Your work is saved in this browser and included in your download. Coaching and drafting send your BRIEF to Google Gemini through this tutor. Do not enter personal information.</p>
+  <p id="storageNotice" class="notice" role="status" hidden></p>
+  <p id="status" class="status" role="status" aria-live="polite">Start with the facts, then write your BRIEF.</p>
+  <div class="layout">
+    <aside class="card facts" aria-labelledby="factsTitle">
+      <p class="eyebrow">Your evidence</p><h2 id="factsTitle">Campus Corner Coffee</h2><p>This business and all its details are fictional.</p><ul id="factList"></ul><p id="factLimits"></p><h3>Style reference only</h3><blockquote id="styleReference"></blockquote><p class="small">Match the style if useful. An example does not approve new facts or offers.</p>
+      <details><summary>See the framework and rubric</summary><div id="rubric"></div><p id="rule"></p><p class="small">A greenlight approves instructions for drafting. Human review happens afterward. Campaign results would be evaluated after distribution.</p></details>
+      <details><summary>Compare weak and strong BRIEFs</summary><h3>Weak</h3><pre>I need a post for a coffee shop. College students. Write a post.</pre><p class="small">The AI has to guess facts, format, and how accuracy will be checked.</p><h3>Strong</h3><div id="strongExample"></div><p class="small">Specific facts, a clear audience and outcome, a defined format, and a human check give the draft direction.</p><button type="button" id="loadExample" class="secondary">Use this example for practice</button></details>
+    </aside>
+    <div>
+      <section id="plan" class="card" aria-labelledby="planTitle"><p class="eyebrow">01 · Plan</p><h2 id="planTitle">Write your BRIEF</h2><p>Your task: encourage a suitable response to the latte launch. Choose one output, then make your audience and objective specific.</p>
+        <label for="outputType">Your output</label><select id="outputType"><option value="">Choose an output</option><option value="organic">Organic Instagram post</option><option value="ad">Instagram ad copy</option></select>
+        <p id="outputHint" class="hint">These are classroom formats, not official platform limits.</p>
+        <button type="button" id="formatHelp" class="secondary">Add the format to E</button><p class="small">Write your own objective above the format. Changing output requires a new grade.</p>
+        <div id="fields"></div>
+        <details><summary>A model F instruction</summary><p id="modelF"></p><p class="small">Adapt it, then carry out the check on the draft.</p></details>
+        <div class="actions"><button type="button" id="coach">Coach my BRIEF</button><button type="button" id="grade" class="secondary">Grade my BRIEF</button></div>
+      </section>
+      <section id="feedback" class="card" aria-labelledby="feedbackTitle"><p class="eyebrow">02 · Get feedback</p><h2 id="feedbackTitle">Improve your instructions</h2><p id="readiness">Complete your BRIEF, then get feedback. Retries carry no penalty.</p><div id="feedbackOutput"></div></section>
+      <section id="draft" class="card" aria-labelledby="draftTitle"><p class="eyebrow">03 · Draft</p><h2 id="draftTitle">Generate a draft</h2><p id="generationHint">Grade your current BRIEF to unlock drafting.</p><button type="button" id="generate" disabled>Generate draft</button><div id="draftArea" hidden><h3>Original AI draft</h3><pre id="originalDraft"></pre><details open><summary>AI claim list</summary><div id="aiClaims"></div><p class="small">This list is a starting point. Read the whole draft and add any claim the AI missed.</p></details></div></section>
+      <section id="review" class="card" aria-labelledby="reviewTitle"><p class="eyebrow">04 · Check and improve</p><h2 id="reviewTitle">Make the final copy yours</h2><p id="reviewHint">Generate a draft first. You will check its facts, explain its fit, and make one purposeful revision.</p>
+        <fieldset id="reviewFields" disabled><legend>Your human review</legend>
+          <h3>Facts</h3><p>Compare each claim with the fact sheet. Correct or remove anything unsupported. Add claims the AI missed, including any introduced in your revision.</p><div id="claimChecks"></div><button type="button" id="addClaim" class="secondary">Add a claim</button>
+          <label class="check"><input type="checkbox" id="noClaims">I found no factual claims</label><label for="noClaimsReason">If there are no claims, explain what you checked</label><textarea id="noClaimsReason" rows="2"></textarea>
+          <h3>Fit</h3><label for="fit">How does the copy serve your audience and objective?</label><textarea id="fit" rows="3" placeholder="Name one phrase that fits, or explain what you changed."></textarea>
+          <h3>Revision</h3><label for="finalCopy">Your revised final copy</label><textarea id="finalCopy" rows="5"></textarea><p id="formatStatus" class="hint"></p>
+          <label for="explanation">Explain one change in two sentences</label><textarea id="explanation" rows="3" placeholder="What changed? Why does it improve the message?"></textarea>
+          <label class="check"><input type="checkbox" id="confirmed">I checked the whole final copy against the facts, audience, objective, and format.</label>
+          <button type="button" id="complete">Save completed review</button>
+        </fieldset><p id="completion" class="notice" hidden></p>
+      </section>
+      <section class="card" aria-labelledby="downloadTitle"><h2 id="downloadTitle">Keep your learning record</h2><p>Download one printable report with your BRIEF, drafts, human review, and process summary. Downloading does not submit your assignment.</p><p id="summary" class="small"></p><div class="actions"><button type="button" id="download">Download my session</button><button type="button" id="newSession" class="secondary">Start a new activity</button></div></section>
+    </div>
+  </div>
+</main><footer class="wrap">BRIEF it before you ship it. You can outsource the draft. You cannot outsource the accountability.</footer>
+</body></html>
