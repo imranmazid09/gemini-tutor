@@ -16,3 +16,5 @@ button.busy::before{content:"";display:inline-block;width:14px;height:14px;borde
 @media print{.stage-nav{display:none}}
 
 .output-selectors{display:grid;grid-template-columns:1fr 1fr;gap:16px}.output-selectors>div{min-width:0}@media(max-width:600px){.output-selectors{grid-template-columns:1fr}}
+
+.optional-creative{margin-top:24px;padding-top:8px;border-top:1px solid var(--border)}

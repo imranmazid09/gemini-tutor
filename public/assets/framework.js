@@ -4,7 +4,7 @@ export const FIELDS = {
   B: {name: 'Background', hint: 'Give the approved facts and one clearly labeled style reference.'},
   R: {name: 'Role', hint: 'Name a specialist suited to this task and business.'},
   I: {name: 'Intended audience', hint: 'Who is this for? Add a relevant need, situation, platform, or sensitivity.'},
-  E: {name: 'Expected output', hint: 'Two parts: the audience outcome, then the deliverable with length, structure, and tone.'},
+  E: {name: 'Expected output', hint: 'Two parts: what you want the audience to think, feel, or do; then the deliverable’s length, structure, and tone.'},
   F: {name: 'Fact-check', hint: 'Set the factual boundary, request a claim-and-source list, and explain your human check.'}
 };
 export const DEFINITIONS = {
@@ -99,7 +99,7 @@ export const SCENARIO_LABELS={"community-garden":"Community Garden","garden-volu
 export function claimSourceLabel(source){return String(source).replace(/\bfact[ -]sheet\s*:\s*title\b/gi,"fact sheet: practice-situation title");}
 
 export const CREATIVE_ANGLES={
- auto:{label:'Let AI choose a strong opening',instruction:'Choose the strongest audience-relevant opening: a question, a relatable moment, or a surprising turn of phrase.'},
+ auto:{label:'No preference: let AI choose',instruction:'Choose the strongest audience-relevant opening: a question, a relatable moment, or a surprising turn of phrase.'},
  question:{label:'Open with a question',instruction:"Open with a specific question that connects to the audience's situation, not a generic question."},
  moment:{label:'Start with a relatable moment',instruction:"Start with a recognizable moment in the audience's day. Make the situation concrete without inventing facts."},
  surprise:{label:'Use a surprising opening',instruction:'Use an unexpected contrast or turn of phrase tied to the approved facts. Do not invent an offer or product benefit.'}
