@@ -1,0 +1,52 @@
+import {LETTERS, RUBRIC_VERSION, briefSnapshot, readiness, wordCount, formatIssues, SCENARIO, getScenario, splitExpected,PLATFORMS,outputSpec,CREATIVE_ANGLES} from './framework.js';
+export const STORAGE_KEY='brief-trainer-v1';
+export function newReview(){return {claims:[],noClaims:false,noClaimsReason:'',fit:'',finalCopy:'',explanation:'',confirmed:false,completedAt:null};}
+export function newSession(scenario=SCENARIO.id){return {version:1,rubricVersion:RUBRIC_VERSION,id:crypto.randomUUID(),startedAt:new Date().toISOString(),revision:0,scenario,eParts:{objective:'',format:'',creative:'auto'},feedback:null,output:'',platform:'instagram',brief:Object.fromEntries(LETTERS.map(k=>[k,''])),grade:null,draft:null,review:newReview(),events:[{type:'session_start',at:new Date().toISOString()}],grades:[],coaching:[],drafts:[]};}
+export function hasCurrentGrade(session){
+  const g=session.grade;
+  try{return Boolean(g && g.snapshot===briefSnapshot(session.brief) && g.output===session.output && (g.scenario??SCENARIO.id)===session.scenario && (g.platform??'instagram')===(session.platform??'instagram') && g.rubricVersion===RUBRIC_VERSION && readiness(g.elements).greenlit && g.approval);}catch{return false;}
+}
+export function hasCurrentDraft(session){return Boolean(session.draft && session.draft.snapshot===briefSnapshot(session.brief) && session.draft.output===session.output && (session.draft.scenario??SCENARIO.id)===session.scenario && (session.draft.platform??'instagram')===(session.platform??'instagram'));}
+export function invalidateBrief(session){session.revision++;session.grade=null;session.feedback=null;session.review.completedAt=null;}
+export function reviewErrors(session){
+  const r=session.review, errors=[];
+  if(!hasCurrentDraft(session)) errors.push('Generate a draft from your current BRIEF first.');
+  if(r.noClaims){if(r.claims.length)errors.push('Remove claim rows only if you found no factual claims.');if(wordCount(r.noClaimsReason)<5)errors.push('Explain what you checked when reporting no factual claims.');}
+  else if(!r.claims.length || r.claims.some(c=>!c.claim.trim()||!c.evidence.trim()||!['verified','corrected','removed'].includes(c.decision)))errors.push('Check every claim row: add evidence or explain the correction/removal, and choose a decision.');
+  if(wordCount(r.fit)<6)errors.push('Explain the audience and objective fit in your own words.');
+  if(!r.finalCopy.trim())errors.push('Write your final copy.');
+  if(r.finalCopy.trim()===session.draft?.copy.trim())errors.push('Make one purposeful improvement to the original draft.');
+  if(wordCount(r.explanation)<10 || (r.explanation.match(/[.!?](?:\s|$)/g)||[]).length<2)errors.push('Explain your revision in two complete sentences: what changed and why it helps.');
+  errors.push(...formatIssues(r.finalCopy,session.output,session.platform));
+  if(!r.confirmed)errors.push('Confirm that you checked the whole final copy.');
+  return errors;
+}
+export function summary(session,now=Date.now()){
+  const scores=Object.fromEntries(LETTERS.map(k=>[k,session.grades.length?session.grades.reduce((sum,g)=>sum+g.elements[k].score,0)/session.grades.length:null]));
+  const min=Math.min(...Object.values(scores).filter(s=>s!==null));
+  const first=session.events.findIndex(e=>e.type==='greenlight');
+  return {activityId:session.id,coachRequests:session.events.filter(e=>e.type==='coach_request').length,gradeAttempts:session.events.filter(e=>e.type==='grade_attempt').length,attemptsToFirstGreenlight:first<0?null:session.events.slice(0,first+1).filter(e=>e.type==='grade_attempt').length,weakestElements:LETTERS.filter(k=>scores[k]!==null&&scores[k]===min),averageScores:scores,elapsedMinutes:Math.max(0,Math.round((now-Date.parse(session.startedAt))/60000)),reviewCompleted:Boolean(session.review.completedAt)};
+}
+export function restoreSession(raw){
+  const s=JSON.parse(raw);
+  // Retire the experimental first-attempt flow while preserving BRIEF work.
+  for(const key of ["flowVersion","initialPrompt","initialReflection","baseline","unlockedAt","comparison"])delete s[key];
+  if(Array.isArray(s.events))s.events=s.events.filter(event=>!["first_attempt_generated","framework_revealed"].includes(event.type));
+  if(Array.isArray(s.drafts))for(const archived of s.drafts)delete archived.comparison;
+  if(Array.isArray(s.events))for(const event of s.events)delete event.comparison;
+  s.platform??='instagram';if(!Object.hasOwn(PLATFORMS,s.platform))throw new Error('Invalid saved platform.');s.scenario??=SCENARIO.id;s.eParts??=splitExpected(s.brief?.E);s.eParts.creative??='auto';if(!Object.hasOwn(CREATIVE_ANGLES,s.eParts.creative))throw new Error('Invalid creative angle.');s.feedback??=s.grade?{result:{...s.grade,approval:undefined},mode:"grade"}:null;
+  if(!getScenario(s.scenario)||typeof s.eParts.objective!=="string"||typeof s.eParts.format!=="string")throw new Error("Invalid saved scenario or expected output.");
+  if(s.version!==1 || s.rubricVersion!==RUBRIC_VERSION || typeof s.id!=='string'||!Number.isFinite(Date.parse(s.startedAt))||!Number.isInteger(s.revision)||!LETTERS.every(k=>typeof s.brief?.[k]==='string'&&s.brief[k].length<=6000)||!['','organic','ad'].includes(s.output)||!Array.isArray(s.events)||!Array.isArray(s.grades)||!Array.isArray(s.coaching)||!Array.isArray(s.drafts)||!s.review||!Array.isArray(s.review.claims))throw new Error('Saved session needs recovery.');
+  for(const k of ['finalCopy','fit','explanation','noClaimsReason'])if(typeof s.review[k]!=='string')throw new Error('Invalid saved review.');
+  if(s.review.claims.some(c=>typeof c.claim!=='string'||typeof c.evidence!=='string'||typeof c.decision!=='string'))throw new Error('Invalid saved claims.');
+  for(const g of s.grades)readiness(g.elements);
+  if(s.draft && (typeof s.draft.copy!=='string'||!Array.isArray(s.draft.claims)))throw new Error('Invalid saved draft.');
+  if(s.review.completedAt && reviewErrors(s).length)s.review.completedAt=null;
+  return s;
+}
+export function escapeHTML(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+export function reportHTML(session){
+  const e=escapeHTML, info=summary(session);
+  const record={...session,feedback:session.feedback?{...session.feedback,result:{...session.feedback.result,approval:undefined}}:null,grade:session.grade?{...session.grade,approval:undefined}:null,grades:session.grades.map(g=>({...g,approval:undefined}))};
+  return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>BRIEF learning record</title><style>body{font:16px/1.6 Arial,sans-serif;color:#17211F;max-width:900px;margin:32px auto;padding:24px}h1{font-family:Georgia,serif}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:#F8F6F0}table{width:100%;border-collapse:collapse}td,th{border:1px solid #D5D9D0;padding:8px;text-align:left}th{background:#D9EBE3}@media print{details{display:block}pre{background:white}}</style><body><h1>BRIEF learning record</h1><p>${e(RUBRIC_VERSION)} | ${e(session.review.completedAt?'Review completed':'Work in progress')}</p><h2>Process summary</h2><p>Activity ${e(info.activityId)}. Coach requests: ${info.coachRequests}. Grade attempts: ${info.gradeAttempts}. Attempts to first greenlight: ${info.attemptsToFirstGreenlight??'Not yet'}. Elapsed session time: ${info.elapsedMinutes} ${info.elapsedMinutes===1?'minute':'minutes'}, not a measure of attention. Weakest elements by average score: ${e(info.weakestElements.join(', ')||'No grades yet')}.</p><h2>Practice situation</h2><p>${e(getScenario(session.scenario)?.title)}</p><pre>${e(JSON.stringify(getScenario(session.scenario),null,2))}</pre><h2>Platform and message type</h2><p>${e(session.output?outputSpec(session.output,session.platform).label:PLATFORMS[session.platform]?.label||'Not selected')}</p><h2>Final BRIEF</h2>${LETTERS.map(k=>`<h3>${k}</h3><pre>${e(session.brief[k])}</pre>`).join('')}<h2>Original AI draft</h2><pre>${e(session.draft?.copy||'No draft yet')}</pre><h2>Revised final copy</h2><pre>${e(session.review.finalCopy)}</pre><h2>Facts</h2><table><thead><tr><th>Claim</th><th>Evidence or change</th><th>Decision</th></tr></thead><tbody>${session.review.claims.map(c=>`<tr><td>${e(c.claim)}</td><td>${e(c.evidence)}</td><td>${e(c.decision)}</td></tr>`).join('')}</tbody></table>${session.review.noClaims?`<p>No factual claims reported: ${e(session.review.noClaimsReason)}</p>`:''}<h2>Fit</h2><pre>${e(session.review.fit)}</pre><h2>Revision explanation</h2><pre>${e(session.review.explanation)}</pre><p>Human confirmation: ${session.review.confirmed?'Yes':'Not yet'}. Review saved: ${e(session.review.completedAt||'Not completed')}.</p><h2>Grade history</h2>${session.grades.map(g=>`<p>${e(g.at)}: ${g.total}/10 | ${g.greenlit?'Ready to draft':'Not ready'} | ${e(g.model)}</p><pre>${e(JSON.stringify(g.elements,null,2))}</pre>`).join('')}<details><summary>Complete process record</summary><pre>${e(JSON.stringify(record,null,2))}</pre></details><p>This file is a learning record. Downloading it does not submit an assignment.</p></body></html>`;
+}
