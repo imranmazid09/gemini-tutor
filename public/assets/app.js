@@ -26,7 +26,7 @@ function renderStatus(){
 }
 function renderFeedback(result,mode){
   $('feedbackOutput').replaceChildren();
-  for(const k of LETTERS){const f=result.elements[k],card=node('div',undefined,'feedback-item');card.append(node('h3',`${k} · ${FIELDS[k].name}${mode==='grade'?` · ${f.score}/2`:''}`),node('p',mode==='coach'?f.verdict:f.feedback));if(!f.evidence||!(mode==='coach'?f.verdict:f.feedback).includes(f.evidence))card.append(node('p',f.evidence?`${k==='E'?'From your E instructions (objective or format)':'Your words'}: “${f.evidence}”`:'Your field is blank.'));if(mode==='coach')card.append(node('p','One fix to adapt: '+f.fix));$('feedbackOutput').append(card);}
+  for(const k of LETTERS){const f=result.elements[k],card=node('div',undefined,'feedback-item');card.append(node('h3',`${k} · ${FIELDS[k].name}${mode==='grade'?` · ${f.score}/2`:''}`),node('p',mode==='coach'?f.verdict:f.feedback));if(!f.evidence||!(mode==='coach'?f.verdict:f.feedback).includes(f.evidence))card.append(node('p',f.evidence?`${k==='E'?'From your E instructions (objective or format)':'Your words'}: “${f.evidence}”`:'Your field is blank.'));if(mode==='coach')card.append(node('p','Next step: '+f.fix));$('feedbackOutput').append(card);}
 }
 function renderClaims(){
   const target=$('claimChecks');target.replaceChildren();
@@ -73,7 +73,7 @@ async function request(action,replaceExisting=false){
       session.grade={...result,snapshot,output,scenario,platform,at:new Date().toISOString()};session.grades.push({...session.grade,approval:undefined,brief});event('grade_result',{total:result.total,scores:Object.fromEntries(LETTERS.map(k=>[k,result.elements[k].score])),greenlit:result.greenlit});if(result.suspectedInjection)event('suspected_instruction_attempt',{action});
       if(result.greenlit)event('greenlight',{total:result.total});session.feedback={result:{...result,approval:undefined},mode:'grade'};renderFeedback(result,'grade');status(result.greenlit?'Your BRIEF is ready to draft. The draft still needs your review.':`${result.total}/10: not ready to draft yet. Review the field feedback, revise, and try again.`);
     }else if(action==='coach'){
-      session.coaching.push({...result,brief,at:new Date().toISOString()});event('coach_result',{elements:LETTERS});if(result.suspectedInjection)event('suspected_instruction_attempt',{action});session.feedback={result,mode:'coach'};renderFeedback(result,'coach');status('Your coaching is ready. Adapt the fixes, then grade your revised BRIEF.');
+      session.coaching.push({...result,brief,at:new Date().toISOString()});event('coach_result',{elements:LETTERS});if(result.suspectedInjection)event('suspected_instruction_attempt',{action});session.feedback={result,mode:'coach'};renderFeedback(result,'coach');status('Your coaching is ready. Keep what works, make any suggested changes, then grade your BRIEF.');
     }else{
       if(typeof result.copy!=='string'||result.copy.length>5000||!Array.isArray(result.claims)||result.claims.length>30||result.claims.some(c=>typeof c.claim!=='string'||c.claim.length>500||typeof c.source!=='string'||c.source.length>1000))throw new Error('The draft response was incomplete. Please retry; your BRIEF is preserved.');
       if(session.draft)session.drafts.push({draft:session.draft,review:structuredClone(session.review)});
