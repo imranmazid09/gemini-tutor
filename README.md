@@ -2,12 +2,12 @@
 
 BRIEF Framework for Prompt Writing
 
-A beginner activity: plan, prompt, check, and improve one organic Instagram post or social ad.
+A beginner activity: plan, prompt, check, and improve one organic social post or paid ad.
 
 ## Student workflow
 
 1. Choose one of ten fictional practice situations and inspect its approved facts, limits, and style reference. Changing situations starts a fresh activity after confirmation.
-2. Choose one output and write B Background, R Role, I Intended audience, E Expected output, and F Fact-check. E has separate communication-objective and output-format inputs; selecting an output fills only the format, preserving the objective.
+2. Choose Instagram, Facebook, Threads, X, or LinkedIn, then choose organic post or paid ad copy and write B Background, R Role, I Intended audience, E Expected output, and F Fact-check. E has separate communication-objective and output-format inputs; selecting a platform or message type fills only the format, preserving the objective.
 3. Get unlimited coaching, then grade the current BRIEF. Readiness requires at least 8/10, every field at least 1, and E and F each at 2.
 4. Generate one draft from the complete BRIEF. Changing the brief or output requires grading again.
 5. Complete the human Facts / Fit / Revision review. Check claims, explain audience/objective fit, make one purposeful improvement, and explain it in two sentences.
@@ -64,7 +64,7 @@ A suspected instruction attempt is only a review flag, not evidence of misconduc
 - `netlify/functions/gemini-proxy.mjs`: modern Netlify handler and per-IP rate limit.
 - `tests/`: local contract tests and instructor calibration fixtures.
 
-Readiness approvals are stateless and expire after one hour. They bind to the normalized brief, selected practice situation, selected output, and rubric version. Generation verifies the approval on the server. This is a learning gate, not identity verification or protection against every form of endpoint abuse.
+Readiness approvals are stateless and expire after one hour. They bind to the normalized brief, selected practice situation, selected platform, selected message type, and rubric version. Generation verifies the approval on the server. This is a learning gate, not identity verification or protection against every form of endpoint abuse.
 
 The function has a 45-second provider timeout and a 200-request-per-minute per-IP limit. Shared campus IPs count together; review the limit during a pilot. Network errors preserve work and allow retry. Browser-storage failures show a warning and leave download available. Stored work is device-specific and may be cleared; download before ending the activity.
 
@@ -85,3 +85,5 @@ The weak/strong comparison uses a separate Neighborhood Paws adoption-informatio
 Draft requests show immediate button and inline progress, use a 55-second browser deadline, validate the draft before rendering, and release controls on failure. A successful live baseline check did not reproduce the externally reported renderer freeze; its browser-specific cause is not yet identified. Delayed, failed, and malformed responses are checked separately from successful requests.
 
 When a saved draft already exists, generation uses an inline Generate a new draft / Keep the existing draft choice instead of a blocking browser confirmation dialog. Approving replacement preserves the prior draft and review in the process record; cancelling preserves the current review. This addresses the carried-over-state path reported in automated Chromium sessions.
+
+Platform formats are classroom constraints: organic posts have 50 words on Instagram, 80 on Facebook or Threads, 40 words and 280 characters on X, and 100 words on LinkedIn. Paid ad copy uses a headline/body/call-to-action practice template on all five platforms. These do not represent official platform limits or native ad specifications. Changing platform or message type preserves the objective, updates the format, and requires grading again. Earlier saved activities default to Instagram on restoration.

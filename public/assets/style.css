@@ -14,3 +14,5 @@ button.busy::before{content:"";display:inline-block;width:14px;height:14px;borde
 @media(max-width:900px){.stage-heading{grid-template-columns:1fr}.stage-heading>p:not(.eyebrow){font-size:24px}.stage-heading>span{display:none}.stage-track{grid-template-columns:repeat(2,minmax(0,1fr))}.stage-nav{padding:16px}.stage-heading{margin-bottom:16px}.stage-link{padding:16px;min-height:176px}.stage-number{font-size:32px;margin-bottom:8px}.stage-arrow{top:16px;right:16px}.stage-link strong{font-size:16px}.stage-marker{margin-top:8px}.stage-track{gap:8px}}
 @media(prefers-reduced-motion:no-preference){.stage-link{transition:background-color .18s,border-color .18s}.stage-link:hover .stage-arrow{transform:translate(2px,-2px)}.stage-arrow{transition:transform .18s}}
 @media print{.stage-nav{display:none}}
+
+.output-selectors{display:grid;grid-template-columns:1fr 1fr;gap:16px}.output-selectors>div{min-width:0}@media(max-width:600px){.output-selectors{grid-template-columns:1fr}}

@@ -50,9 +50,20 @@ export const SCENARIOS = [SCENARIO,
 ];
 SCENARIO.focus='Product launch';SCENARIO.task='Encourage a suitable response to the latte launch. Make your audience and objective specific.';
 export function getScenario(id=SCENARIO.id){return SCENARIOS.find(s=>s.id===id);}
+export const PLATFORMS = {
+ instagram:{label:'Instagram',words:50,tone:'friendly'},
+ facebook:{label:'Facebook',words:80,tone:'welcoming and community-focused'},
+ threads:{label:'Threads',words:80,tone:'conversational'},
+ x:{label:'X',words:40,characters:280,tone:'clear and concise'},
+ linkedin:{label:'LinkedIn',words:100,tone:'professional and approachable'}
+};
+export function outputSpec(output,platform='instagram'){
+ const p=PLATFORMS[platform];if(!p||!['organic','ad'].includes(output))throw new Error('Choose a platform and message type.');
+ return {label:p.label+' '+(output==='organic'?'organic post':'paid ad copy'),format:output==='organic'?`one organic ${p.label} post, at most ${p.words} words${p.characters?` and ${p.characters} characters`:''}, with a ${p.tone} tone and one clear call to action suited to your objective`:`${p.label} paid ad copy using the classroom practice template: a headline of at most 8 words, body of at most 30 words, and one short call to action. Use a ${p.tone} tone`};
+}
 export const OUTPUTS = {
-  organic: {label: 'Organic Instagram post', format: 'one organic Instagram caption, at most 50 words, friendly, with one clear call to action suited to your objective'},
-  ad: {label: 'Instagram ad copy', format: 'Instagram ad copy with a headline of at most 8 words, body of at most 30 words, and one short call to action. Use a friendly tone'}
+  organic: {label: 'Organic post', format: 'one organic Instagram caption, at most 50 words, friendly, with one clear call to action suited to your objective'},
+  ad: {label: 'Paid ad copy', format: 'Instagram ad copy with a headline of at most 8 words, body of at most 30 words, and one short call to action. Use a friendly tone'}
 };
 export const MODEL_F = 'Use only the approved facts in Background. Do not invent statistics, quotes, offers, or product benefits. List factual claims separately and identify where each came from. I will check every claim against the fact sheet and correct or remove unsupported claims before submitting.';
 export const EXAMPLE = {
@@ -68,8 +79,8 @@ export function readiness(elements) {
 }
 export function briefSnapshot(brief) { return JSON.stringify(Object.fromEntries(LETTERS.map(k => [k, String(brief[k] ?? '').trim()]))); }
 export function wordCount(text) { return String(text).trim().split(/\s+/u).filter(Boolean).length; }
-export function formatIssues(copy, output) {
-  if (output === 'organic') return wordCount(copy) > 50 ? ['The caption is over the classroom limit of 50 words.'] : [];
+export function formatIssues(copy, output, platform='instagram') {
+  if(output==='organic'){const p=PLATFORMS[platform];if(!p)return ['Choose a platform.'];const issues=[];if(wordCount(copy)>p.words)issues.push(`The post is over the classroom limit of ${p.words} words.`);if(p.characters&&Array.from(copy).length>p.characters)issues.push(`The post is over the classroom limit of ${p.characters} characters.`);return issues;}
   const lines = String(copy).split('\n');
   const find = name => lines.find(s => s.toLowerCase().startsWith(name.toLowerCase() + ':'))?.split(':').slice(1).join(':').trim();
   const headline = find('Headline'), body = find('Body'), cta = find('Call to action');
