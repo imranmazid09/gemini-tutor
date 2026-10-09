@@ -114,3 +114,11 @@ $('complete').addEventListener('click',()=>{const errors=reviewErrors(session);i
 $('download').addEventListener('click',download);
 $('newSession').addEventListener('click',()=>{if(!confirm('Start a new activity? Download your current record first if you want to keep it.'))return;startActivity(session.scenario);$('field-B').focus();});
 window.addEventListener('pagehide',persist);renderScenario();outputHint();renderDraft();if(session.feedback)renderFeedback(session.feedback.result,session.feedback.mode);persist();
+
+// This highlights the section in view, not assignment completion.
+const stageLinks=[...document.querySelectorAll('.stage-link')];
+function highlightStage(id){for(const link of stageLinks){const current=link.hash==='#'+id;if(current)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');link.querySelector('.stage-marker').hidden=!current;}}
+let stageFrame=0;
+function trackStage(){if(stageFrame)return;stageFrame=requestAnimationFrame(()=>{stageFrame=0;let current='plan';for(const id of ['plan','feedback','draft','review'])if($(id).getBoundingClientRect().top<=96)current=id;highlightStage(current);});}
+for(const link of stageLinks)link.addEventListener('click',()=>highlightStage(link.hash.slice(1)));
+window.addEventListener('scroll',trackStage,{passive:true});window.addEventListener('resize',trackStage);trackStage();
