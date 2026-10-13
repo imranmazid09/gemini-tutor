@@ -23,7 +23,7 @@ export const WORKED_EXAMPLE = {
  strong:{B:'Neighborhood Paws is a fictional shelter. Its adoption information day is Saturday, 11 a.m.–2 p.m., at 18 Oak Avenue. Visitors can meet staff and learn about adoption. Entry is free. No adoption guarantee or animal count is approved. Style reference only: "Meet the team. Ask your questions. Learn what adoption could look like for you."',R:'You are a social media copywriter for animal shelters.',I:'Local adults who are considering adoption but want to understand the process before deciding.',E:'Objective: encourage these adults to visit the information day and ask staff questions. Format: one organic Instagram caption of at most 50 words, with a welcoming tone and one invitation to attend.',F:'Use only approved Background facts. Do not invent animal counts, fees, quotes, or adoption guarantees. List factual claims separately with their source. I will compare each claim with the fact sheet and correct or remove unsupported claims before submitting.'},
  why:{B:'The strong version supplies event details and distinguishes style from facts.',R:'It names expertise suited to the organization and task.',I:'It specifies an audience with a relevant uncertainty.',E:'It connects an audience response to a concrete format and limits.',F:'It sets boundaries, requests sources, and makes the human check explicit.'}
 };
-export const RULE = 'At least 8/10, every field at least 1, and E and F each at 2.';
+export const RULE = 'To generate a draft, earn at least 8 out of 10, with at least 1 point in every field and 2 points each in E and F. The final copy must also follow the selected classroom format.';
 export const RUBRIC = {
   B: ['No usable situation or facts.', 'Some usable context, but insufficient task facts or no usable style example.', 'Enough specific approved facts for the task plus a usable style example.'],
   R: ['No usable role.', 'A generic role such as marketing expert.', 'A relevant specialist with a task domain.'],
@@ -59,11 +59,11 @@ export const PLATFORMS = {
 };
 export function outputSpec(output,platform='instagram'){
  const p=PLATFORMS[platform];if(!p||!['organic','ad'].includes(output))throw new Error('Choose a platform and message type.');
- return {label:p.label+' '+(output==='organic'?'organic post':'paid ad copy'),format:output==='organic'?`one organic ${p.label} post, at most ${p.words} words${p.characters?` and ${p.characters} characters`:''}, with a ${p.tone} tone and one clear call to action suited to your objective`:`${p.label} paid ad copy using the classroom practice template: a headline of at most 8 words, body of at most 30 words, and one short call to action. Use a ${p.tone} tone`};
+ return {label:p.label+' '+(output==='organic'?'organic post':'paid ad copy'),format:output==='organic'?`one organic ${p.label} post, at most ${p.words} words${p.characters?` and ${p.characters} characters`:''}, with a ${p.tone} tone and one clear call to action suited to your objective`:`${p.label} paid ad copy using the classroom practice template: three labeled lines: Headline: (at most 8 words), Body: (at most 30 words), and Call to action: (one short invitation). Use a ${p.tone} tone`};
 }
 export const OUTPUTS = {
   organic: {label: 'Organic post', format: 'one organic Instagram caption, at most 50 words, friendly, with one clear call to action suited to your objective'},
-  ad: {label: 'Paid ad copy', format: 'Instagram ad copy with a headline of at most 8 words, body of at most 30 words, and one short call to action. Use a friendly tone'}
+  ad: {label: 'Paid ad copy', format: 'Instagram ad copy with three labeled lines: Headline: (at most 8 words), Body: (at most 30 words), and Call to action: (one short invitation). Use a friendly tone'}
 };
 export const MODEL_F = 'Use only the approved facts in Background. Do not invent statistics, quotes, offers, or product benefits. List factual claims separately and identify where each came from. I will check every claim against the fact sheet and correct or remove unsupported claims before submitting.';
 export const EXAMPLE = {
