@@ -89,3 +89,11 @@ When a saved draft already exists, generation uses an inline Generate a new draf
 Platform formats are classroom constraints: organic posts have 50 words on Instagram, 80 on Facebook or Threads, 40 words and 280 characters on X, and 100 words on LinkedIn. Paid ad copy uses a headline/body/call-to-action practice template on all five platforms. These do not represent official platform limits or native ad specifications. Changing platform or message type preserves the objective, updates the format, and requires grading again. Earlier saved activities default to Instagram on restoration.
 
 Creative direction in E offers an AI-chosen opening, a question, a relatable moment, or a surprising opening. Generation instructions favor a concrete audience-relevant idea over stock promotional phrases while preserving approved-fact boundaries. A separate shelter example compares routine and more distinctive copy. Objectives containing Beat labels or old format instructions show an optional cleanup action; student outcomes and measurement language are preserved. Save my final work records the reviewed copy locally and does not submit an assignment.
+
+## Targeted feedback fixes (2026-10-23)
+
+Coaching and grading now return a cross-field unsupported-claim audit, separate from the five rubric scores. Exact quoted claims and their field locations are shown above feedback. A nonempty audit blocks drafting even when the rubric total passes. Audience preferences, hypothetical scenes, objectives, and prohibitions are distinguished from assertions about the product or organization. The audit remains AI-assisted, not a guarantee of factual accuracy. Prior approvals require a new check.
+
+Save validation appears beside Save my final work, marks incomplete claim cells and rows, and focuses the first problem. If browser storage fails after a valid review, a nearby message asks the student to download the work.
+
+Recorded working time estimates visible, focused browser time following interaction, with a 60-second idle cutoff. Closed/hidden time and suspended timer gaps over 15 seconds are excluded. Activity age is reported separately. Existing records retain their work and counts; prior working-time history is unavailable and subsequent timing is explicitly partial. The measure is not attention or a validated engagement measure.

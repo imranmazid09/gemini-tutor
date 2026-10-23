@@ -5,7 +5,7 @@ import {createHandler,approvalToken,verifyApproval,validateResult,requestBody,pa
 import {newSession,hasCurrentGrade,hasCurrentDraft,invalidateBrief,reviewErrors,reportHTML,restoreSession,summary} from '../public/assets/session.js';
 import {readFile} from 'node:fs/promises';
 const elements=scores=>Object.fromEntries(LETTERS.map((k,i)=>[k,{score:scores[i],evidence:EXAMPLE[k].slice(0,30),feedback:'Specific rubric feedback.'}]));
-const result=scores=>({elements:elements(scores),suspectedInjection:false});
+const result=scores=>({elements:elements(scores),suspectedInjection:false,unsupportedClaims:[]});
 const request=body=>new Request('https://tutor.example/.netlify/functions/gemini-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 const response=content=>Response.json({status:'completed',steps:[{type:'thought',signature:'not user output'},{type:'model_output',content:[{type:'text',text:JSON.stringify(content)}]}]});
 const handler=(fetchFn, key='test-secret')=>createHandler({env:name=>name==='GEMINI_API_KEY'?key:undefined,fetchFn,now:()=>1000});
@@ -30,7 +30,7 @@ test('malformed results blank scores and fabricated evidence never pass',()=>{
  assert.throws(()=>parseInteraction({status:'in_progress',steps:[]}));assert.throws(()=>parseInteraction({status:'completed',steps:[]}));
 });
 test('coaching has evidence fixes and no scores',()=>{
- const coach={elements:Object.fromEntries(LETTERS.map(k=>[k,{verdict:'This detail helps.',evidence:EXAMPLE[k].slice(0,20),fix:'A concrete rewrite.'}])),suspectedInjection:false};
+ const coach={elements:Object.fromEntries(LETTERS.map(k=>[k,{verdict:'This detail helps.',evidence:EXAMPLE[k].slice(0,20),fix:'A concrete rewrite.'}])),suspectedInjection:false,unsupportedClaims:[]};
  assert(!Object.hasOwn(validateResult('coach',coach,EXAMPLE,'organic'),'total'));coach.elements.B.score=2;assert.throws(()=>validateResult('coach',coach,EXAMPLE,'organic'));
 });
 test('method empty payload size and missing key errors make no provider call',async()=>{
@@ -87,3 +87,33 @@ test('five platforms carry distinct classroom formats and cannot share draft app
 test('saved Instagram work migrates and platform changes invalidate its grade and draft',()=>{const s=newSession();s.brief={...EXAMPLE};s.output='organic';s.grade={...result([2,2,2,2,2]),snapshot:briefSnapshot(s.brief),output:s.output,approval:'signed',rubricVersion:'BRIEF-1.0'};s.draft={copy:'Original saved copy',claims:[],snapshot:briefSnapshot(s.brief),output:s.output};delete s.platform;const migrated=restoreSession(JSON.stringify(s));assert.equal(migrated.platform,'instagram');assert(hasCurrentGrade(migrated));assert(hasCurrentDraft(migrated));migrated.platform='linkedin';assert(!hasCurrentGrade(migrated));assert(!hasCurrentDraft(migrated));assert(reportHTML(migrated).includes('LinkedIn organic post'));});
 
 test('Beat labels and conflicting old format are removed without losing the objective or measurement',()=>{const old='Beat 1, the objective: drive trial visits during launch week, measured by students mentioning the post at the counter. Beat 2, the format: one organic Instagram caption of no more than 50 words, casual student voice.\\nFormat: Instagram paid ad copy';assert(hasMixedObjective(old));assert.equal(cleanObjective(old),'drive trial visits during launch week, measured by students mentioning the post at the counter.');assert(!hasMixedObjective('Encourage students to visit Monday.'));assert.equal(Object.keys(CREATIVE_ANGLES).length,4);});
+
+test('unsupported factual assertions in any field block drafting despite full rubric scores',async()=>{
+ for(const field of LETTERS){
+  const brief={...EXAMPLE,[field]:EXAMPLE[field]+' This latte is dairy-free.'};
+  const r={...result([2,2,2,2,2]),unsupportedClaims:[{field,quote:'This latte is dairy-free.',reason:'Oat milk does not establish that the complete latte is dairy-free.'}]};
+  const h=handler(async()=>response(r));const res=await h(request({action:'grade',brief,output:'organic'}));const data=await res.json();assert.equal(res.status,200);assert.equal(data.total,10);assert.equal(data.greenlit,false);assert(!data.approval);assert.equal(data.unsupportedClaims[0].field,field);
+  const s=newSession();s.brief=brief;s.output='organic';s.grade={...data,snapshot:briefSnapshot(brief),output:'organic',approval:'forged'};assert(!hasCurrentGrade(s));
+ }
+ const incomplete=result([2,2,2,2,2]);delete incomplete.unsupportedClaims;assert.throws(()=>validateResult('grade',incomplete,EXAMPLE,'organic'));
+ const fabricated={...result([2,2,2,2,2]),unsupportedClaims:[{field:'I',quote:'Made-up quotation',reason:'Unsupported'}]};assert.throws(()=>validateResult('grade',fabricated,EXAMPLE,'organic'));
+});
+test('approval issued before the cross-field claims audit cannot unlock generation',async()=>{
+ const {createHmac}=await import('node:crypto');
+ const token=approvalToken(EXAMPLE,'organic','secret',1000);const body=JSON.parse(Buffer.from(token.split('.')[0],'base64url'));delete body.claimsCheck;
+ const encoded=Buffer.from(JSON.stringify(body)).toString('base64url');const old=encoded+'.'+createHmac('sha256','secret').update(encoded).digest('base64url');assert(!verifyApproval(old,EXAMPLE,'organic','secret',1000));
+});
+test('working time excludes idle, hidden, suspended and between-visit periods; old history stays partial',async()=>{
+ const {workingClock}=await import('../public/assets/session.js');let now=0;const s=newSession();const clock=workingClock(s,()=>now);
+ now=10000;clock.tick(true);assert.equal(s.workingTime.milliseconds,0);
+ clock.interact(true);for(let i=0;i<8;i++){now+=10000;clock.tick(true);}assert.equal(s.workingTime.milliseconds,60000);
+ clock.interact(true);now+=5000;clock.tick(true);assert.equal(s.workingTime.milliseconds,65000);
+ clock.pause();now+=291*60000;clock.tick(false);clock.interact(true);now+=300000;clock.tick(true);assert.equal(s.workingTime.milliseconds,65000);
+ const restored=restoreSession(JSON.stringify(s));const resumed=workingClock(restored,()=>now);now+=10000;resumed.tick(true);assert.equal(restored.workingTime.milliseconds,65000);
+ const legacy=JSON.parse(JSON.stringify(s));delete legacy.workingTime;legacy.startedAt=new Date(Date.now()-291*60000).toISOString();const migrated=restoreSession(JSON.stringify(legacy));assert.equal(summary(migrated).workingMinutes,0);assert.equal(summary(migrated).workingTimeComplete,false);assert.equal(summary(migrated).activityAgeMinutes,291);assert(reportHTML(migrated).includes('Earlier working-time history is unavailable'));
+});
+test('save validation identifies exactly which claim cells need attention',async()=>{
+ const {reviewValidation}=await import('../public/assets/session.js');const s=newSession();s.output='organic';s.draft={copy:'Original copy.',claims:[],snapshot:briefSnapshot(s.brief),output:'organic'};
+ s.review={...s.review,claims:[{claim:'Latte costs $4.50.',evidence:'',decision:''}],fit:'For students between classes.',finalCopy:'Try the latte Monday for $4.50.',explanation:'I added the price. It clarifies the offer.',confirmed:true};
+ assert.deepEqual(reviewValidation(s),[{message:'Check every claim row: add evidence or explain the correction/removal, and choose a decision.',fields:['claim-0-evidence','decision-0']}]);
+});

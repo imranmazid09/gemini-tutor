@@ -1,17 +1,26 @@
 import {LETTERS,FIELDS,RULE,RUBRIC,SCENARIO,OUTPUTS,MODEL_F,EXAMPLE,RUBRIC_VERSION,briefSnapshot,formatIssues,SCENARIOS,getScenario,exampleFor,splitExpected,combineExpected,DEFINITIONS,WORKED_EXAMPLE,SCENARIO_LABELS,claimSourceLabel,PLATFORMS,outputSpec,CREATIVE_ANGLES,CREATIVE_COMPARISON,cleanObjective,hasMixedObjective} from './framework.js';
-import {STORAGE_KEY,newSession,newReview,hasCurrentGrade,hasCurrentDraft,invalidateBrief,reviewErrors,summary,restoreSession,reportHTML} from './session.js';
+import {STORAGE_KEY,newSession,newReview,hasCurrentGrade,hasCurrentDraft,invalidateBrief,reviewErrors,reviewValidation,workingClock,summary,restoreSession,reportHTML} from './session.js';
 const $=id=>document.getElementById(id);
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
 let session=newSession(), busy=false,saveTimer,storageAvailable=true,recoveryRaw=null;
 try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){try{session=restoreSession(raw);}catch{recoveryRaw=raw;storageAvailable=false;$('storageNotice').hidden=false;$('storageNotice').textContent='An older saved record could not be restored. Download it using Download my session before starting fresh. New work is kept in memory until you start a new activity.';}}}catch{storageAvailable=false;storageWarning();}
+let clock=workingClock(session);
+const timingEligible=()=>document.visibilityState==='visible'&&document.hasFocus();
+for(const type of ['pointerdown','keydown','input','scroll'])document.addEventListener(type,()=>clock.interact(timingEligible()),{passive:true,capture:true});
+document.addEventListener('visibilitychange',()=>{clock.pause();persist();});
+window.addEventListener('blur',()=>{clock.pause();persist();});
+window.addEventListener('focus',()=>clock.pause());
+setInterval(()=>persist(),10000);
 function storageWarning(){$('storageNotice').hidden=false;$('storageNotice').textContent='This browser cannot save your work reliably. Keep this tab open and download your session before leaving.';}
-function persist(){clearTimeout(saveTimer);if(storageAvailable){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(session));}catch{storageAvailable=false;storageWarning();}}renderSummary();}
+function persist(){clock.tick(timingEligible());clearTimeout(saveTimer);if(storageAvailable){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(session));}catch{storageAvailable=false;storageWarning();}}renderSummary();}
 function saveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);}
 function event(type,data={}){session.events.push({type,at:new Date().toISOString(),...data});}
 function status(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error);}
-function reviewChanged(){session.review.completedAt=null;$('completion').hidden=true;saveSoon();}
+function clearSaveError(){$('saveError').hidden=true;for(const el of document.querySelectorAll('[aria-invalid]')){el.removeAttribute('aria-invalid');el.removeAttribute('aria-describedby');}for(const row of document.querySelectorAll('.claim.invalid'))row.classList.remove('invalid');}
+function showSaveError(message){$('saveError').textContent=message;$('saveError').hidden=false;}
+function reviewChanged(){clearSaveError();session.review.completedAt=null;$('completion').hidden=true;saveSoon();}
 function briefChanged(){$('replaceDraftPrompt').hidden=true;invalidateBrief(session);$('feedbackOutput').replaceChildren();renderStatus();saveSoon();}
-function renderSummary(){const s=summary(session);$('summary').textContent=`This activity: ${s.coachRequests} coach ${s.coachRequests===1?'request':'requests'} · ${s.gradeAttempts} rubric ${s.gradeAttempts===1?'check':'checks'} · ${s.elapsedMinutes} ${s.elapsedMinutes===1?'minute':'minutes'} elapsed. Returning to this activity resumes these counts. Start a new activity to reset them. Retries carry no penalty.`;}
+function renderSummary(){const s=summary(session);$('summary').textContent=`This activity: ${s.coachRequests} coach ${s.coachRequests===1?'request':'requests'} · ${s.gradeAttempts} rubric ${s.gradeAttempts===1?'check':'checks'} · ${s.workingMinutes} minutes recorded working time${s.workingTimeComplete?'':' since timing update (earlier time unavailable)'}. Counts resume with this activity. Working time excludes time away and pauses after 60 seconds idle; it is an estimate, not a measure of attention. Start a new activity to reset the counts. Retries carry no penalty.`;}
 function renderStatus(){
   const ready=hasCurrentGrade(session),draftCurrent=hasCurrentDraft(session);
   $('readiness').textContent=ready?`Your BRIEF meets this activity’s drafting criteria: ${session.grade.total}/10. The draft still needs your review.`:session.grade?`${session.grade.total}/10: not ready to draft yet. ${RULE} Return to your BRIEF above, revise the relevant fields, then check it again.`:'Check your current BRIEF when ready. '+RULE;
@@ -26,6 +35,7 @@ function renderStatus(){
 }
 function renderFeedback(result,mode){
   $('feedbackOutput').replaceChildren();
+  if(result.unsupportedClaims?.length){const warning=node('div',undefined,'notice error');warning.append(node('h3','Correct unsupported claims before drafting'));for(const issue of result.unsupportedClaims)warning.append(node('p',`${issue.field}: “${issue.quote}” — ${issue.reason}`));$('feedbackOutput').append(warning);}
   for(const k of LETTERS){const f=result.elements[k],card=node('div',undefined,'feedback-item');card.append(node('h3',`${k} · ${FIELDS[k].name}${mode==='grade'?` · ${f.score}/2`:''}`),node('p',mode==='coach'?f.verdict:f.feedback));if(!f.evidence||!(mode==='coach'?f.verdict:f.feedback).includes(f.evidence))card.append(node('p',f.evidence?`${k==='E'?'From your E instructions (objective or format)':'Your words'}: “${f.evidence}”`:'Your field is blank.'));if(mode==='coach')card.append(node('p','Next step: '+f.fix));$('feedbackOutput').append(card);}
 }
 function renderClaims(){
@@ -110,16 +120,27 @@ for(const k of LETTERS){
 function outputHint(){const type=session.output;$('outputHint').textContent=type?`Classroom format: ${outputSpec(type,session.platform).format}. These are practice constraints, not official platform limits or native ad specifications.`:'Choose a message type. These are classroom constraints, not official platform limits.';}
 function changeOutput(){session.output=$('outputType').value;session.platform=$('platform').value;session.eParts.format=session.output?outputSpec(session.output,session.platform).format+'.':'';syncE();$('field-E-format').value=session.eParts.format;outputHint();briefChanged();status(session.output?'The format in E has been updated for your selection, replacing any format edits. Review its tone, then check your BRIEF again.':'Choose a message type to fill the format in E and enable feedback. Your objective is preserved.');}
 $('outputType').value=session.output;$('platform').value=session.platform;$('outputType').addEventListener('change',changeOutput);$('platform').addEventListener('change',changeOutput);
-function startActivity(scenario){$('replaceDraftPrompt').hidden=true;clearTimeout(saveTimer);try{localStorage.removeItem(STORAGE_KEY);}catch{}recoveryRaw=null;storageAvailable=true;session=newSession(scenario);fillFields();$('outputType').value='';$('platform').value=session.platform;$('feedbackOutput').replaceChildren();renderScenario();outputHint();renderDraft();persist();status('A new activity is ready. Inspect the facts and decide who the message should reach.');}
+function startActivity(scenario){$('replaceDraftPrompt').hidden=true;clearTimeout(saveTimer);try{localStorage.removeItem(STORAGE_KEY);}catch{}recoveryRaw=null;storageAvailable=true;session=newSession(scenario);clock=workingClock(session);clearSaveError();fillFields();$('outputType').value='';$('platform').value=session.platform;$('feedbackOutput').replaceChildren();renderScenario();outputHint();renderDraft();persist();status('A new activity is ready. Inspect the facts and decide who the message should reach.');}
 $('scenario').addEventListener('change',()=>{const id=$('scenario').value;if(LETTERS.some(k=>session.brief[k].trim())&&!confirm('Changing the practice situation starts a new activity. Download your current session first if you want to keep it. Continue?')){$('scenario').value=session.scenario;return;}startActivity(id);});
 for(const action of ['coach','grade'])$(action).addEventListener('click',()=>request(action));$('generate').addEventListener('click',()=>request('generate'));$('replaceDraft').addEventListener('click',()=>request('generate',true));$('keepDraft').addEventListener('click',()=>{$('replaceDraftPrompt').hidden=true;status('Kept your existing draft and review.');$('generate').focus();});
 for(const key of ['fit','finalCopy','explanation','noClaimsReason'])$(key).addEventListener('input',()=>{session.review[key]=$(key).value;reviewChanged();if(key==='finalCopy')renderFormat();});
 for(const key of ['confirmed','noClaims'])$(key).addEventListener('change',()=>{session.review[key]=$(key).checked;reviewChanged();});
 $('addClaim').addEventListener('click',()=>{session.review.claims.push({claim:'',evidence:'',decision:''});session.review.noClaims=false;$('noClaims').checked=false;renderClaims();reviewChanged();});
-$('complete').addEventListener('click',()=>{const errors=reviewErrors(session);if(errors.length){status(errors.join(' '),true);return;}session.review.completedAt=new Date().toISOString();event('factcheck_submit',{draftId:session.draft.id,review:structuredClone(session.review)});persist();renderStatus();status('Your review is complete. Download your session to keep and submit the work.');});
+$('complete').addEventListener('click',()=>{
+  clearSaveError();const issues=reviewValidation(session);
+  if(issues.length){
+    $('completion').hidden=true;showSaveError('Not saved. '+issues.map(i=>i.message).join(' '));
+    const fields=[...new Set(issues.flatMap(i=>i.fields))];
+    for(const id of fields){const el=$(id);el.setAttribute('aria-invalid','true');el.setAttribute('aria-describedby','saveError');el.closest('.claim')?.classList.add('invalid');}
+    const first=fields.map($).find(el=>!el.disabled);if(first){first.focus();first.scrollIntoView({block:'center'});}return;
+  }
+  session.review.completedAt=new Date().toISOString();event('factcheck_submit',{draftId:session.draft.id,review:structuredClone(session.review)});persist();renderStatus();
+  if(!storageAvailable){showSaveError('Your review is complete in this tab, but browser saving failed. Download your session now to keep your work.');return;}
+  status('Your review is complete. Download your session to keep and submit the work.');
+});
 $('download').addEventListener('click',download);
 $('newSession').addEventListener('click',()=>{if(!confirm('Start a new activity? Download your current record first if you want to keep it.'))return;startActivity(session.scenario);$('field-B').focus();});
-window.addEventListener('pagehide',persist);objectiveHint();renderScenario();outputHint();renderDraft();if(session.feedback)renderFeedback(session.feedback.result,session.feedback.mode);persist();
+window.addEventListener('pagehide',()=>{clock.pause();persist();});objectiveHint();renderScenario();outputHint();renderDraft();if(session.feedback)renderFeedback(session.feedback.result,session.feedback.mode);persist();
 
 // This highlights the section in view, not assignment completion.
 const stageLinks=[...document.querySelectorAll('.stage-link')];
